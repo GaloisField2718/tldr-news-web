@@ -1,12 +1,41 @@
+import { mkdtemp, rm } from "node:fs/promises"
+import os from "node:os"
+import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import SearchPage from "@/app/search/page"
+import IssuePage from "@/app/issues/[sector]/[date]/page"
 import { ArticleEntry } from "@/components/article-entry"
 import { ArticleMetadata } from "@/components/article-metadata"
 import { IssueHeader } from "@/components/issue-header"
 import { SearchField } from "@/components/search-field"
 import { issues } from "@/lib/fixtures"
 import type { Article, ContentType } from "@/lib/types"
+import { generateFrontendArtifacts } from "../scripts/tldr-data-lib.mjs"
+import { representativeIssues, writeDataset } from "./helpers/dataset"
+
+let temporary: string
+beforeAll(async () => {
+  temporary = await mkdtemp(path.join(os.tmpdir(), "tldr-frontend-test-"))
+  const generated = path.join(temporary, "generated")
+  const artifacts = path.join(temporary, "artifacts")
+  await writeDataset(generated, representativeIssues())
+  await generateFrontendArtifacts({
+    generatedDir: generated,
+    outputDir: artifacts,
+    sourceRepository: "owner/source",
+    requestedRef: "test",
+    resolvedSourceCommit: "c".repeat(40),
+    sourceMode: "local",
+  })
+  process.env.TLDR_GENERATED_DIR = artifacts
+  process.env.TLDR_ISSUES_DIR = generated
+})
+afterAll(async () => {
+  delete process.env.TLDR_GENERATED_DIR
+  delete process.env.TLDR_ISSUES_DIR
+  await rm(temporary, { recursive: true, force: true })
+})
 
 const article = (contentType: ContentType): Article => ({
   id: `test-${contentType}`,
@@ -72,6 +101,17 @@ describe("search forms", () => {
     expect(html).toContain('action="/search"')
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Search<\/button>/)
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Apply<\/button>/)
+  })
+})
+
+describe("issue rendering", () => {
+  it("renders a restrained message for a failed issue without sections", async () => {
+    const page = await IssuePage({
+      params: Promise.resolve({ sector: "tldr", date: "2023-01-17" }),
+    })
+    const html = renderToStaticMarkup(page)
+    expect(html).toContain("no readable entries could be recovered")
+    expect(html).toContain("failed parse")
   })
 })
 

@@ -2,12 +2,8 @@ import type { Metadata } from "next"
 import { SearchField } from "@/components/search-field"
 import { SearchFilters } from "@/components/search-filters"
 import { SearchResult } from "@/components/search-result"
-import {
-  getSectors,
-  getYears,
-  searchArticles,
-  type ReadingTimeBucket,
-} from "@/lib/archive"
+import { getSectors, getYears } from "@/lib/archive"
+import { searchArticles, type ReadingTimeBucket } from "@/lib/search"
 
 export const metadata: Metadata = {
   title: "Search",
@@ -86,8 +82,12 @@ export default async function SearchPage({ searchParams }: PageProps) {
               </p>
             ) : (
               <div className="divide-y divide-border">
-                {results.map((item) => (
-                  <SearchResult key={item.article.id} item={item} query={query} />
+                {results.map((item, index) => (
+                  <SearchResult
+                    key={`${item.issue_id}-${item.section_heading}-${item.article.id}-${index}`}
+                    item={item}
+                    query={query}
+                  />
                 ))}
               </div>
             )}

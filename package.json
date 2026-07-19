@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "data:sync": "node scripts/sync-tldr-data.mjs",
+    "data:check": "node scripts/check-tldr-data.mjs",
+    "prebuild": "npm run data:sync",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

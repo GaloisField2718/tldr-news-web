@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import type { SectorSummary, ContentType } from "@/lib/types"
-import { CONTENT_TYPE_LABELS } from "@/lib/archive"
+import { CONTENT_TYPE_LABELS } from "@/lib/content-types"
 
 interface SearchFiltersProps {
   sectors: SectorSummary[]

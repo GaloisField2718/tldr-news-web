@@ -1,8 +1,8 @@
-import type { IssueListItem } from "@/lib/types"
+import type { ArchiveCatalogueEntry } from "@/lib/types"
 import { IssueListRow } from "@/components/issue-list-row"
 
 interface IssueListProps {
-  issues: IssueListItem[]
+  issues: ArchiveCatalogueEntry[]
   showSector?: boolean
 }
 

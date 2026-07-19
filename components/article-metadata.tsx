@@ -1,6 +1,6 @@
 import type { Article } from "@/lib/types"
 import { formatReadingTime } from "@/lib/format"
-import { CONTENT_TYPE_LABELS } from "@/lib/archive"
+import { CONTENT_TYPE_LABELS } from "@/lib/content-types"
 
 interface ArticleMetadataProps {
   article: Article
