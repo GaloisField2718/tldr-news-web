@@ -15,7 +15,7 @@ export function IssueListRow({ issue, showSector = true }: IssueListRowProps) {
     <article>
       <Link
         href={href}
-        className="group grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-1 py-4 md:grid-cols-[7.5rem_1fr] md:gap-x-6"
+        className="group grid grid-cols-1 items-baseline gap-y-1 py-4 md:grid-cols-[7.5rem_1fr] md:gap-x-6"
       >
         <time
           dateTime={issue.date}

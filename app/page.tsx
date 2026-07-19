@@ -17,16 +17,16 @@ export default function HomePage() {
         <p className="font-mono text-xs uppercase tracking-widest text-faint-foreground">
           The TLDR Newsletter Archive
         </p>
-        <h1 className="mt-3 max-w-3xl font-serif text-4xl leading-[1.05] text-foreground text-balance md:text-5xl">
+        <h1 className="mt-3 max-w-3xl font-serif text-3xl leading-[1.08] text-foreground text-balance md:text-[2.6rem]">
           A searchable index of every TLDR issue
         </h1>
-        <p className="mt-4 max-w-2xl font-sans text-base leading-relaxed text-muted-foreground text-pretty">
+        <p className="mt-3 max-w-2xl font-sans text-[15px] leading-relaxed text-muted-foreground text-pretty">
           {manifest.total_issues.toLocaleString()} indexed issues across{" "}
           {sectors.length} sectors, normalized into sections and articles for
           close reading and research.
         </p>
 
-        <div className="mt-6 max-w-2xl">
+        <div className="mt-3 max-w-2xl">
           <SearchField size="lg" />
         </div>
       </section>

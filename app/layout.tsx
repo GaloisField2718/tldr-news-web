@@ -49,9 +49,9 @@ export default function RootLayout({
       lang="en"
       className={`bg-background ${sourceSerif.variable} ${plexSans.variable} ${plexMono.variable}`}
     >
-      <body className="min-h-screen flex flex-col font-sans antialiased">
+      <body className="font-sans antialiased">
         <SiteHeader />
-        <main className="flex-1">{children}</main>
+        <main>{children}</main>
         <SiteFooter />
       </body>
     </html>

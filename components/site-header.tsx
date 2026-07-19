@@ -10,12 +10,9 @@ export function SiteHeader() {
   return (
     <header className="border-b border-border-strong bg-background">
       <div className="mx-auto flex max-w-5xl items-baseline justify-between gap-6 px-5 py-4 md:px-8">
-        <Link href="/" className="group flex items-baseline gap-2">
+        <Link href="/" className="group">
           <span className="font-serif text-xl font-semibold tracking-tight text-foreground">
             TLDR Index
-          </span>
-          <span className="hidden font-mono text-[10px] uppercase tracking-widest text-faint-foreground sm:inline">
-            Archive
           </span>
         </Link>
 

@@ -30,23 +30,35 @@ function byDateDesc(a: { date: string }, b: { date: string }): number {
   return b.date.localeCompare(a.date)
 }
 
+// The full published TLDR lineup, in editorial order. Issue counts are derived
+// from the indexed archive below; sectors with no indexed issues yet resolve to
+// a count of 0 rather than disappearing from the index.
+const CANONICAL_SECTORS: { sector: string; sector_slug: string }[] = [
+  { sector: "TLDR", sector_slug: "tldr" },
+  { sector: "TLDR AI", sector_slug: "tldr-ai" },
+  { sector: "TLDR Crypto", sector_slug: "tldr-crypto" },
+  { sector: "TLDR Marketing", sector_slug: "tldr-marketing" },
+  { sector: "TLDR Design", sector_slug: "tldr-design" },
+  { sector: "TLDR Web Dev", sector_slug: "tldr-web-dev" },
+  { sector: "TLDR InfoSec", sector_slug: "tldr-infosec" },
+  { sector: "TLDR Founders", sector_slug: "tldr-founders" },
+  { sector: "TLDR Product", sector_slug: "tldr-product" },
+  { sector: "TLDR Dev", sector_slug: "tldr-dev" },
+  { sector: "TLDR Cybersecurity", sector_slug: "tldr-cybersecurity" },
+]
+
 export function getManifest(): Manifest {
   const manifestIssues = issues.map(toManifestIssue).sort(byDateDesc)
 
-  const sectorMap = new Map<string, SectorSummary>()
+  const counts = new Map<string, number>()
   for (const issue of issues) {
-    const existing = sectorMap.get(issue.sector_slug)
-    if (existing) {
-      existing.issue_count += 1
-    } else {
-      sectorMap.set(issue.sector_slug, {
-        sector: issue.sector,
-        sector_slug: issue.sector_slug,
-        issue_count: 1,
-      })
-    }
+    counts.set(issue.sector_slug, (counts.get(issue.sector_slug) ?? 0) + 1)
   }
-  const sectors = [...sectorMap.values()].sort((a, b) => a.sector.localeCompare(b.sector))
+  const sectors: SectorSummary[] = CANONICAL_SECTORS.map((s) => ({
+    sector: s.sector,
+    sector_slug: s.sector_slug,
+    issue_count: counts.get(s.sector_slug) ?? 0,
+  }))
 
   const years = [...new Set(issues.map((i) => Number(i.date.slice(0, 4))))].sort((a, b) => b - a)
 

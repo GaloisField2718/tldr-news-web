@@ -48,8 +48,8 @@ export function SearchField({
         />
         <button
           type="submit"
-          className={`shrink-0 border-l border-border bg-transparent font-sans font-medium uppercase tracking-wide text-accent transition-colors hover:text-accent-hover ${
-            isLarge ? "ml-3 pl-4 text-sm" : "ml-2 pl-3 text-xs"
+          className={`shrink-0 border-l border-border bg-transparent font-sans font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
+            isLarge ? "ml-3 pl-4 text-[13px]" : "ml-2 pl-3 text-xs"
           }`}
         >
           Search

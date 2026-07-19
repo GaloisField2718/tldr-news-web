@@ -1,10 +1,78 @@
-import type { Issue } from "./types"
+import type { Article, Issue } from "./types"
 
 // Typed fixture issues implementing the archive data contract.
 // These stand in for the normalized archive of 5,900+ historical issues.
 // Replacing this module with a static JSON loader requires no UI changes.
 
+// Stress-test fixture: a single dense issue with 40 articles under a long
+// sector name. Exercises deep scrolling, section navigation, and mixed
+// content types / missing fields at volume.
+function makeDenseCyberIssue(): Issue {
+  const domains = [
+    "thehackernews.com",
+    "bleepingcomputer.com",
+    "krebsonsecurity.com",
+    "darkreading.com",
+    null,
+  ]
+  const makeArticle = (n: number, sectionOffset: number): Article => {
+    const i = sectionOffset + n
+    return {
+      id: `cyber-2026-07-13-${i}`,
+      order: n,
+      title:
+        i % 7 === 0
+          ? `A deliberately long advisory title number ${i} that wraps to a second line to verify dense-issue rhythm, hanging alignment, and the relationship between title and summary at volume`
+          : `Advisory ${i}: a concise incident writeup worth indexing`,
+      summary:
+        "A normalized summary line preserved from the source issue for close reading and search.",
+      url: i % 5 === 0 ? null : `https://example.com/cyber/${i}`,
+      reading_time_minutes: i % 4 === 0 ? null : ((i % 12) + 2),
+      source_domain: domains[i % domains.length],
+      content_type: i % 9 === 0 ? "quick_link" : "article",
+      is_sponsor: false,
+    }
+  }
+  const sponsor: Article = {
+    id: "cyber-2026-07-13-sponsor",
+    order: 3,
+    title: "Continuous exposure management for lean security teams",
+    summary: "Sponsored. Asset discovery, prioritized findings, and remediation tracking in one place.",
+    url: "https://example.com/cyber-sponsor",
+    reading_time_minutes: 2,
+    source_domain: "exposuregrid.io",
+    content_type: "sponsor",
+    is_sponsor: true,
+  }
+
+  // 40 total: 10 + sponsor sits inside section one, then 30 more across sections.
+  const s1 = [makeArticle(1, 0), makeArticle(2, 0), sponsor, ...Array.from({ length: 7 }, (_, k) => makeArticle(k + 4, 0))]
+  const s2 = Array.from({ length: 15 }, (_, k) => makeArticle(k + 1, 10))
+  const s3 = Array.from({ length: 15 }, (_, k) => makeArticle(k + 1, 25))
+
+  return {
+    schema_version: "1.0.0",
+    generator_version: "0.1.3",
+    issue_id: "tldr-cybersecurity:2026-07-13",
+    sector: "TLDR Cybersecurity",
+    sector_slug: "tldr-cybersecurity",
+    date: "2026-07-13",
+    source_path: "TLDR Cybersecurity/article_13-07-2026.md",
+    source_content_hash: "sha256:fixture",
+    format_family: "links_block",
+    parse_status: "partial",
+    parse_warnings: ["High article count; two headings merged during normalization."],
+    title: "TLDR Cybersecurity — July 13, 2026",
+    sections: [
+      { id: "attacks-breaches", heading: "Attacks & Breaches", order: 1, articles: s1 },
+      { id: "vulnerabilities", heading: "Vulnerabilities & Patches", order: 2, articles: s2 },
+      { id: "strategies-tactics", heading: "Strategies & Tactics", order: 3, articles: s3 },
+    ],
+  }
+}
+
 export const issues: Issue[] = [
+  makeDenseCyberIssue(),
   {
     schema_version: "1.0.0",
     generator_version: "0.1.3",
