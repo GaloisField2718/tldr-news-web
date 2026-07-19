@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+/*
+  TLDR Index — editorial archive theme.
+  Light mode is the primary, default design. Semantic variables are used so a
+  dark theme can be layered later, but only the light theme is implemented now.
+*/
+
+:root {
+  /* Surfaces */
+  --background: #f7f5ef; /* warm off-white page */
+  --surface: #fbfaf6; /* raised paper for subtle grouping */
+  --surface-sunken: #efece3; /* recessed wells, filter backdrops */
+
+  /* Ink */
+  --foreground: #1a1917; /* near-black text */
+  --muted-foreground: #6b665c; /* metadata, secondary text */
+  --faint-foreground: #8f8a7e; /* least prominent labels */
+
+  /* Rules & borders */
+  --border: #ddd8cc; /* standard hairline */
+  --border-strong: #c3bdac; /* emphasized rules */
+
+  /* Accent — a single muted editorial rust/red */
+  --accent: #8a3324;
+  --accent-hover: #6f281c;
+  --accent-soft: #f0e6e0; /* tint for sponsored / active states */
+
+  --radius: 3px;
+
+  /* Fonts (wired to next/font variables in layout) */
+  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint-foreground: var(--faint-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: 2px;
+  --radius: var(--radius);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    background-color: var(--color-background);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "kern";
+  }
+
+  ::selection {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent-hover);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
