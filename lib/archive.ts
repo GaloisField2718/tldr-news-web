@@ -3,8 +3,8 @@ import type {
   Article,
   ContentType,
   Issue,
-  Manifest,
-  ManifestIssue,
+  ArchiveSummary,
+  IssueListItem,
   SectorSummary,
 } from "./types"
 
@@ -12,7 +12,7 @@ import type {
 // these helpers, so the underlying source (fixtures today, static JSON later)
 // can change without touching components.
 
-function toManifestIssue(issue: Issue): ManifestIssue {
+function toIssueListItem(issue: Issue): IssueListItem {
   const article_count = issue.sections.reduce((sum, s) => sum + s.articles.length, 0)
   return {
     issue_id: issue.issue_id,
@@ -47,8 +47,8 @@ const CANONICAL_SECTORS: { sector: string; sector_slug: string }[] = [
   { sector: "TLDR Cybersecurity", sector_slug: "tldr-cybersecurity" },
 ]
 
-export function getManifest(): Manifest {
-  const manifestIssues = issues.map(toManifestIssue).sort(byDateDesc)
+export function getManifest(): ArchiveSummary {
+  const manifestIssues = issues.map(toIssueListItem).sort(byDateDesc)
 
   const counts = new Map<string, number>()
   for (const issue of issues) {
@@ -72,8 +72,8 @@ export function getManifest(): Manifest {
   }
 }
 
-export function getLatestIssues(limit?: number): ManifestIssue[] {
-  const sorted = issues.map(toManifestIssue).sort(byDateDesc)
+export function getLatestIssues(limit?: number): IssueListItem[] {
+  const sorted = issues.map(toIssueListItem).sort(byDateDesc)
   return typeof limit === "number" ? sorted.slice(0, limit) : sorted
 }
 
@@ -89,10 +89,10 @@ export function getIssue(sectorSlug: string, date: string): Issue | undefined {
   return issues.find((i) => i.sector_slug === sectorSlug && i.date === date)
 }
 
-export function getIssuesBySector(sectorSlug: string): ManifestIssue[] {
+export function getIssuesBySector(sectorSlug: string): IssueListItem[] {
   return issues
     .filter((i) => i.sector_slug === sectorSlug)
-    .map(toManifestIssue)
+    .map(toIssueListItem)
     .sort(byDateDesc)
 }
 
@@ -100,7 +100,7 @@ export function getIssuesBySector(sectorSlug: string): ManifestIssue[] {
 export interface ArchiveMonth {
   month: number
   monthLabel: string
-  issues: ManifestIssue[]
+  issues: IssueListItem[]
 }
 export interface ArchiveYear {
   year: number
@@ -124,8 +124,8 @@ const MONTH_LABELS = [
 ]
 
 export function getArchiveIndex(): ArchiveYear[] {
-  const all = issues.map(toManifestIssue)
-  const yearMap = new Map<number, Map<number, ManifestIssue[]>>()
+  const all = issues.map(toIssueListItem)
+  const yearMap = new Map<number, Map<number, IssueListItem[]>>()
 
   for (const issue of all) {
     const year = Number(issue.date.slice(0, 4))
@@ -219,9 +219,9 @@ export function searchArticles(params: SearchParams): SearchResultItem[] {
 }
 
 export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  article: "Article",
+  editorial: "Article",
   sponsor: "Sponsor",
-  quick_link: "Quick link",
-  job: "Job",
+  github_repo: "GitHub repository",
+  course: "Course",
   tool: "Tool",
 }

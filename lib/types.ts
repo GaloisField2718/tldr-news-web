@@ -1,12 +1,22 @@
-// Data contract for the TLDR Index archive.
-// These types mirror the normalized archive shape. Fixture data implements the
-// same contract, so it can later be replaced by static JSON without UI changes.
+// Raw generated issue contract used by tldr_news JSON files. Frontend listing
+// and search view models are defined separately below.
 
 export type ParseStatus = "complete" | "partial" | "failed"
 
-export type FormatFamily = "links_block" | "prose" | "mixed"
+export type FormatFamily = "links_block" | "inline_url" | "unknown"
 
-export type ContentType = "article" | "sponsor" | "quick_link" | "job" | "tool"
+export type ContentType =
+  | "editorial"
+  | "sponsor"
+  | "github_repo"
+  | "course"
+  | "tool"
+
+export interface ParseWarning {
+  code: string
+  message: string
+  line: number | null
+}
 
 export interface Article {
   id: string
@@ -45,13 +55,13 @@ export interface Issue {
   source_content_hash: string
   format_family: FormatFamily
   parse_status: ParseStatus
-  parse_warnings: string[]
+  parse_warnings: ParseWarning[]
   title: string
   sections: Section[]
 }
 
-/** Lightweight issue reference used in listings and the manifest. */
-export interface ManifestIssue {
+/** Frontend-enriched issue summary used by archive and homepage listings. */
+export interface IssueListItem {
   issue_id: string
   sector: string
   sector_slug: string
@@ -63,7 +73,8 @@ export interface ManifestIssue {
   article_count: number
 }
 
-export interface Manifest {
+/** Frontend archive summary assembled from generated issues. */
+export interface ArchiveSummary {
   schema_version: string
   generator_version: string
   /** Total issue count across the archive. */
@@ -72,7 +83,7 @@ export interface Manifest {
   sectors: SectorSummary[]
   /** Years represented in the archive, descending. */
   years: number[]
-  issues: ManifestIssue[]
+  issues: IssueListItem[]
 }
 
 export interface SectorSummary {

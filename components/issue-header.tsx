@@ -52,8 +52,14 @@ export function IssueHeader({ issue }: IssueHeaderProps) {
             Parse notes
           </p>
           <ul className="mt-1 list-inside list-disc font-sans text-sm text-foreground">
-            {issue.parse_warnings.map((w, i) => (
-              <li key={i}>{w}</li>
+            {issue.parse_warnings.map((warning, i) => (
+              <li key={`${warning.code}-${warning.line ?? "unknown"}-${i}`}>
+                {warning.message}
+                <span className="ml-2 font-mono text-xs text-faint-foreground">
+                  {warning.code}
+                  {warning.line !== null && ` · line ${warning.line}`}
+                </span>
+              </li>
             ))}
           </ul>
         </div>

@@ -30,7 +30,7 @@ export function ArticleMetadata({ article, extra }: ArticleMetadataProps) {
         </>
       )}
 
-      {article.content_type !== "article" && !article.is_sponsor && (
+      {article.content_type !== "editorial" && (
         <>
           <span aria-hidden="true" className="text-border-strong">
             ·

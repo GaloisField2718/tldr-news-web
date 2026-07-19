@@ -55,7 +55,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
         {/* Single GET form: query + filters submit together, keeping results shareable. */}
         <form action="/search" role="search" className="mt-6">
-          <SearchField defaultValue={query} size="lg" autoFocus />
+          <SearchField standalone={false} defaultValue={query} size="lg" autoFocus />
           <SearchFilters
             sectors={sectors}
             years={years}
