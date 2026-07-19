@@ -100,15 +100,15 @@ describe("archive catalogue", () => {
 
 describe("server-side segmented search", () => {
   it("searches titles and summaries case-insensitively", () => {
-    expect(searchArticles({ query: "MODEL" })).toHaveLength(1)
-    expect(searchArticles({ query: "historical summary" })).toHaveLength(1)
+    expect(searchArticles({ query: "MODEL" }).total).toBe(1)
+    expect(searchArticles({ query: "historical summary" }).total).toBe(1)
   })
 
   it("supports sector, year, content type, reading time, and combined filters", () => {
-    expect(searchArticles({ sector: "tldr-ai" })).toHaveLength(6)
-    expect(searchArticles({ year: "2023" })).toHaveLength(0)
-    expect(searchArticles({ contentType: "sponsor" })).toHaveLength(1)
-    expect(searchArticles({ readingTime: "medium" })).toHaveLength(5)
+    expect(searchArticles({ sector: "tldr-ai" }).total).toBe(6)
+    expect(searchArticles({ year: "2023" }).total).toBe(0)
+    expect(searchArticles({ contentType: "sponsor" }).total).toBe(1)
+    expect(searchArticles({ readingTime: "medium" }).total).toBe(5)
     expect(
       searchArticles({
         query: "model",
@@ -116,13 +116,13 @@ describe("server-side segmented search", () => {
         year: "2026",
         contentType: "editorial",
         readingTime: "medium",
-      }),
-    ).toHaveLength(1)
+      }).total,
+    ).toBe(1)
   })
 
   it("returns no results safely and preserves nullable fields and issue routes", () => {
-    expect(searchArticles({ query: "not present anywhere" })).toEqual([])
-    const [result] = searchArticles({ query: "historical summary" })
+    expect(searchArticles({ query: "not present anywhere" }).items).toEqual([])
+    const [result] = searchArticles({ query: "historical summary" }).items
     expect(result.article).toMatchObject({ url: null, reading_time_minutes: null })
     expect(result.issue_route).toBe("/issues/tldr-ai/2026-06-01")
   })

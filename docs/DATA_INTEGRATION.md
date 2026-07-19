@@ -36,24 +36,24 @@ The local override receives identical validation and is copied into the same cac
 
 **Selected: build-local issue files.** Issue routes resolve a compact catalogue entry and read its validated JSON from `.generated/issues/`, copied atomically from `.cache/tldr-data/<sha>/generated/issues/` during artifact generation. Catalogue and issue content therefore always use the same source SHA. Next output-file tracing includes these files only in the dynamic issue route; issue pages are not all statically generated.
 
-At source commit `d25dee6db9b888c42871853623aca4d511551825`, generated source files occupy 77,897,303 bytes (about 85 MiB on disk across 5,930 files including the manifest). The measured issue-route trace is 75.76 MiB, below Vercel's 250 MiB uncompressed function limit; the search-route trace is 20.56 MiB.
+At source commit `d25dee6db9b888c42871853623aca4d511551825`, generated source files occupy 77,897,303 bytes (about 85 MiB on disk across 5,930 files including the manifest). The measured issue-route trace is 75.76 MiB, below Vercel's 250 MiB uncompressed function limit; the search-route trace is 21.52 MiB.
 
 **Rejected: immutable remote issue fetching.** It would reduce deployment size, but every issue request would depend on GitHub availability, latency, unauthenticated rate limits, and runtime caching. The measured build-local corpus does not justify those risks.
 
 ## Selected search architecture
 
-**Selected: server-side search over deterministic gzip files segmented by year.** Search documents include only article display/search fields and issue routing metadata. The server decompresses only the selected year when `year` is present; all four segments are scanned for an all-years query. No search corpus or raw issue corpus is included in a client bundle, and the browser's first-load search-data payload is zero bytes.
+**Selected: server-side search over deterministic gzip files segmented by year.** Search documents include only article display/search fields and issue routing metadata. Segments are generated in display order by descending issue date and stable sector/article identifiers. The server decompresses only the selected year when `year` is present; all four segments are scanned for an all-years query. It counts all exact matches while retaining only the requested 50-item page window. No search corpus or raw issue corpus is included in a client bundle, and the browser's first-load search-data payload is zero bytes.
 
 Measurements at the source commit above:
 
 - Articles: 93,081 total; 92,649 with a non-empty title or summary
 - Uncompressed search JSON: 72,258,534 bytes
-- Gzip search artifacts: 17,519,272 bytes
-- Largest segment: 2025, 6,392,803 bytes gzip
-- Catalogue: 2,248,177 bytes
+- Gzip search artifacts: 18,523,369 bytes
+- Largest segment: 2025, 6,783,616 bytes gzip
+- Catalogue: 2,248,171 bytes
 - Browser first-load search payload: 0 bytes of search artifacts
 
-**Rejected: segmented client search.** Even segmented, the largest compressed year is about 6.4 MB, and all-years search would transfer about 17.5 MB and block the browser with over 72 MB of decoded JSON.
+**Rejected: segmented client search.** Even segmented, the largest compressed year is about 6.8 MB, and all-years search would transfer about 18.5 MB and block the browser with over 72 MB of decoded JSON.
 
 **Rejected: an additional static search engine.** The measured 93,081-document corpus is straightforward to scan server-side and does not justify another dependency or index format in this bounded integration.
 

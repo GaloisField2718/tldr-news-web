@@ -12,14 +12,28 @@ import { SearchField } from "@/components/search-field"
 import { issues } from "@/lib/fixtures"
 import type { Article, ContentType } from "@/lib/types"
 import { generateFrontendArtifacts } from "../scripts/tldr-data-lib.mjs"
-import { representativeIssues, writeDataset } from "./helpers/dataset"
+import {
+  makeArticle,
+  makeIssue,
+  representativeIssues,
+  writeDataset,
+} from "./helpers/dataset"
 
 let temporary: string
 beforeAll(async () => {
   temporary = await mkdtemp(path.join(os.tmpdir(), "tldr-frontend-test-"))
   const generated = path.join(temporary, "generated")
   const artifacts = path.join(temporary, "artifacts")
-  await writeDataset(generated, representativeIssues())
+  const paginationArticles = Array.from({ length: 60 }, (_, index) =>
+    makeArticle(`tldr-ai:2026-08-01:a${String(index + 1).padStart(3, "0")}`, "editorial", {
+      order: index + 1,
+      title: `Model pagination result ${index + 1}`,
+    }),
+  )
+  await writeDataset(generated, [
+    ...representativeIssues(),
+    makeIssue({ date: "2026-08-01", articles: paginationArticles }),
+  ])
   await generateFrontendArtifacts({
     generatedDir: generated,
     outputDir: artifacts,
@@ -101,6 +115,34 @@ describe("search forms", () => {
     expect(html).toContain('action="/search"')
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Search<\/button>/)
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Apply<\/button>/)
+  })
+
+  it("preserves every search parameter in pagination links", async () => {
+    const page = await SearchPage({
+      searchParams: Promise.resolve({
+        q: "model",
+        sector: "tldr-ai",
+        year: "2026",
+        type: "editorial",
+        reading: "medium",
+        page: "1",
+      }),
+    })
+    const html = renderToStaticMarkup(page)
+    expect(html).toContain("61 matches")
+    expect(html).toContain(
+      "q=model&amp;sector=tldr-ai&amp;year=2026&amp;type=editorial&amp;reading=medium&amp;page=2",
+    )
+  })
+
+  it("resets pagination when the main search form is submitted", async () => {
+    const page = await SearchPage({
+      searchParams: Promise.resolve({ sector: "tldr-ai", page: "2" }),
+    })
+    const html = renderToStaticMarkup(page)
+    const form = html.slice(html.indexOf("<form"), html.indexOf("</form>") + 7)
+    expect(form).not.toContain('name="page"')
+    expect(html).toContain("Page 2 of 2")
   })
 })
 

@@ -379,6 +379,15 @@ export async function generateFrontendArtifacts({
   const segments = []
   for (const year of [...searchByYear.keys()].sort((a, b) => b.localeCompare(a))) {
     const documents = searchByYear.get(year)
+    documents.sort(
+      (a, b) =>
+        b.issue_date.localeCompare(a.issue_date) ||
+        a.sector_slug.localeCompare(b.sector_slug) ||
+        a.issue_id.localeCompare(b.issue_id) ||
+        a.id.localeCompare(b.id) ||
+        a.section_heading.localeCompare(b.section_heading) ||
+        a.title.localeCompare(b.title),
+    )
     const uncompressed = Buffer.from(JSON.stringify(documents))
     const compressed = gzipSync(uncompressed, { level: 9, mtime: 0 })
     const filename = `${year}.json.gz`
