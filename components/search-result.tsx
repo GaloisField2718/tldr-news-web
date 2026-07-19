@@ -1,5 +1,5 @@
 import Link from "next/link"
-import type { SearchResultItem } from "@/lib/archive"
+import type { SearchResultItem } from "@/lib/search"
 import { ArticleMetadata } from "@/components/article-metadata"
 import { ArrowUpRightIcon } from "@/components/icons"
 import { formatMonoDate } from "@/lib/format"
@@ -38,7 +38,7 @@ function highlight(text: string, query?: string): React.ReactNode {
 // A dense, readable result row. No card — hairline separation only.
 export function SearchResult({ item, query }: SearchResultProps) {
   const { article } = item
-  const issueHref = `/issues/${item.sector_slug}/${item.date}`
+  const issueHref = item.issue_route
 
   const sectorExtra = (
     <Link

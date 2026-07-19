@@ -2,13 +2,13 @@ import Link from "next/link"
 import { SearchField } from "@/components/search-field"
 import { SectorNav } from "@/components/sector-nav"
 import { IssueList } from "@/components/issue-list"
-import { getLatestIssues, getSectors, getYears, getManifest } from "@/lib/archive"
+import { getLatestIssues, getSectors, getYears, getArchiveCatalogue } from "@/lib/archive"
 
 export default function HomePage() {
   const latest = getLatestIssues(6)
   const sectors = getSectors()
   const years = getYears()
-  const manifest = getManifest()
+  const manifest = getArchiveCatalogue()
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-10 md:px-8 md:py-14">

@@ -1,9 +1,9 @@
 import Link from "next/link"
-import type { IssueListItem } from "@/lib/types"
+import type { ArchiveCatalogueEntry } from "@/lib/types"
 import { formatLongDate, formatMonoDate } from "@/lib/format"
 
 interface IssueListRowProps {
-  issue: IssueListItem
+  issue: ArchiveCatalogueEntry
   /** Hide the sector label when the surrounding list is already sector-scoped. */
   showSector?: boolean
 }

@@ -1,106 +1,81 @@
-import { issues } from "./fixtures"
+import { readFileSync } from "node:fs"
+import path from "node:path"
 import type {
-  Article,
-  ContentType,
-  Issue,
-  ArchiveSummary,
-  IssueListItem,
+  ArchiveCatalogue,
+  ArchiveCatalogueEntry,
+  ArchiveSourceMetadata,
   SectorSummary,
 } from "./types"
 
-// Data-access layer over the archive. Every read the UI performs goes through
-// these helpers, so the underlying source (fixtures today, static JSON later)
-// can change without touching components.
+export function getGeneratedDataRoot(): string {
+  if (process.env.TLDR_GENERATED_DIR) return path.resolve(process.env.TLDR_GENERATED_DIR)
+  return path.join(/* turbopackIgnore: true */ process.cwd(), ".generated")
+}
 
-function toIssueListItem(issue: Issue): IssueListItem {
-  const article_count = issue.sections.reduce((sum, s) => sum + s.articles.length, 0)
-  return {
-    issue_id: issue.issue_id,
-    sector: issue.sector,
-    sector_slug: issue.sector_slug,
-    date: issue.date,
-    title: issue.title,
-    parse_status: issue.parse_status,
-    section_count: issue.sections.length,
-    article_count,
+export function readGeneratedJson<T>(file: string, label: string): T {
+  try {
+    return JSON.parse(readFileSync(file, "utf8")) as T
+  } catch (error) {
+    throw new Error(
+      `Real TLDR archive data is unavailable (${label}). Run \`npm run data:sync\` before starting or building the application.`,
+      { cause: error },
+    )
   }
 }
 
-function byDateDesc(a: { date: string }, b: { date: string }): number {
-  return b.date.localeCompare(a.date)
+let catalogueCache: { root: string; value: ArchiveCatalogue } | undefined
+export function getArchiveCatalogue(): ArchiveCatalogue {
+  const root = getGeneratedDataRoot()
+  if (catalogueCache?.root !== root) {
+    catalogueCache = {
+      root,
+      value: readGeneratedJson<ArchiveCatalogue>(
+        path.join(root, "archive-catalogue.json"),
+        "archive catalogue",
+      ),
+    }
+  }
+  return catalogueCache.value
 }
 
-// The full published TLDR lineup, in editorial order. Issue counts are derived
-// from the indexed archive below; sectors with no indexed issues yet resolve to
-// a count of 0 rather than disappearing from the index.
-const CANONICAL_SECTORS: { sector: string; sector_slug: string }[] = [
-  { sector: "TLDR", sector_slug: "tldr" },
-  { sector: "TLDR AI", sector_slug: "tldr-ai" },
-  { sector: "TLDR Crypto", sector_slug: "tldr-crypto" },
-  { sector: "TLDR Marketing", sector_slug: "tldr-marketing" },
-  { sector: "TLDR Design", sector_slug: "tldr-design" },
-  { sector: "TLDR Web Dev", sector_slug: "tldr-web-dev" },
-  { sector: "TLDR InfoSec", sector_slug: "tldr-infosec" },
-  { sector: "TLDR Founders", sector_slug: "tldr-founders" },
-  { sector: "TLDR Product", sector_slug: "tldr-product" },
-  { sector: "TLDR Dev", sector_slug: "tldr-dev" },
-  { sector: "TLDR Cybersecurity", sector_slug: "tldr-cybersecurity" },
-]
-
-export function getManifest(): ArchiveSummary {
-  const manifestIssues = issues.map(toIssueListItem).sort(byDateDesc)
-
-  const counts = new Map<string, number>()
-  for (const issue of issues) {
-    counts.set(issue.sector_slug, (counts.get(issue.sector_slug) ?? 0) + 1)
-  }
-  const sectors: SectorSummary[] = CANONICAL_SECTORS.map((s) => ({
-    sector: s.sector,
-    sector_slug: s.sector_slug,
-    issue_count: counts.get(s.sector_slug) ?? 0,
-  }))
-
-  const years = [...new Set(issues.map((i) => Number(i.date.slice(0, 4))))].sort((a, b) => b - a)
-
-  return {
-    schema_version: "1.0.0",
-    generator_version: "0.1.3",
-    total_issues: issues.length,
-    sectors,
-    years,
-    issues: manifestIssues,
-  }
+export function getSourceMetadata(): ArchiveSourceMetadata {
+  return getArchiveCatalogue()
 }
 
-export function getLatestIssues(limit?: number): IssueListItem[] {
-  const sorted = issues.map(toIssueListItem).sort(byDateDesc)
-  return typeof limit === "number" ? sorted.slice(0, limit) : sorted
+function byDateDesc(a: ArchiveCatalogueEntry, b: ArchiveCatalogueEntry): number {
+  return b.date.localeCompare(a.date) || a.sector_slug.localeCompare(b.sector_slug)
+}
+
+export function getLatestIssues(limit?: number): ArchiveCatalogueEntry[] {
+  const issues = getArchiveCatalogue().issues
+  return typeof limit === "number" ? issues.slice(0, limit) : issues
 }
 
 export function getSectors(): SectorSummary[] {
-  return getManifest().sectors
+  return getArchiveCatalogue().sectors
 }
 
 export function getYears(): number[] {
-  return getManifest().years
+  return getArchiveCatalogue().years
 }
 
-export function getIssue(sectorSlug: string, date: string): Issue | undefined {
-  return issues.find((i) => i.sector_slug === sectorSlug && i.date === date)
+export function findCatalogueIssue(
+  sectorSlug: string,
+  date: string,
+): ArchiveCatalogueEntry | undefined {
+  return getArchiveCatalogue().issues.find(
+    (issue) => issue.sector_slug === sectorSlug && issue.date === date,
+  )
 }
 
-export function getIssuesBySector(sectorSlug: string): IssueListItem[] {
-  return issues
-    .filter((i) => i.sector_slug === sectorSlug)
-    .map(toIssueListItem)
-    .sort(byDateDesc)
+export function getIssuesBySector(sectorSlug: string): ArchiveCatalogueEntry[] {
+  return getArchiveCatalogue().issues.filter((issue) => issue.sector_slug === sectorSlug)
 }
 
-/** All issues grouped for the archive index: year -> month -> issues. */
 export interface ArchiveMonth {
   month: number
   monthLabel: string
-  issues: IssueListItem[]
+  issues: ArchiveCatalogueEntry[]
 }
 export interface ArchiveYear {
   year: number
@@ -124,10 +99,8 @@ const MONTH_LABELS = [
 ]
 
 export function getArchiveIndex(): ArchiveYear[] {
-  const all = issues.map(toIssueListItem)
-  const yearMap = new Map<number, Map<number, IssueListItem[]>>()
-
-  for (const issue of all) {
+  const yearMap = new Map<number, Map<number, ArchiveCatalogueEntry[]>>()
+  for (const issue of getArchiveCatalogue().issues) {
     const year = Number(issue.date.slice(0, 4))
     const month = Number(issue.date.slice(5, 7))
     if (!yearMap.has(year)) yearMap.set(year, new Map())
@@ -135,93 +108,20 @@ export function getArchiveIndex(): ArchiveYear[] {
     if (!monthMap.has(month)) monthMap.set(month, [])
     monthMap.get(month)!.push(issue)
   }
-
   return [...yearMap.entries()]
     .sort((a, b) => b[0] - a[0])
     .map(([year, monthMap]) => {
-      const months: ArchiveMonth[] = [...monthMap.entries()]
+      const months = [...monthMap.entries()]
         .sort((a, b) => b[0] - a[0])
-        .map(([month, monthIssues]) => ({
+        .map(([month, issues]) => ({
           month,
           monthLabel: MONTH_LABELS[month - 1],
-          issues: monthIssues.sort(byDateDesc),
+          issues: issues.sort(byDateDesc),
         }))
-      const issue_count = months.reduce((sum, m) => sum + m.issues.length, 0)
-      return { year, issue_count, months }
-    })
-}
-
-// --- Search -----------------------------------------------------------------
-
-export type ReadingTimeBucket = "any" | "short" | "medium" | "long"
-
-export interface SearchParams {
-  query?: string
-  sector?: string
-  year?: string
-  contentType?: string
-  readingTime?: ReadingTimeBucket
-}
-
-export interface SearchResultItem {
-  article: Article
-  issue_id: string
-  sector: string
-  sector_slug: string
-  date: string
-  section_heading: string
-}
-
-function matchesReadingTime(minutes: number | null, bucket: ReadingTimeBucket): boolean {
-  if (bucket === "any") return true
-  if (minutes === null) return false
-  if (bucket === "short") return minutes <= 4
-  if (bucket === "medium") return minutes >= 5 && minutes <= 9
-  return minutes >= 10
-}
-
-export function searchArticles(params: SearchParams): SearchResultItem[] {
-  const q = params.query?.trim().toLowerCase() ?? ""
-  const results: SearchResultItem[] = []
-
-  for (const issue of issues) {
-    if (params.sector && params.sector !== "all" && issue.sector_slug !== params.sector) continue
-    if (params.year && params.year !== "all" && !issue.date.startsWith(params.year)) continue
-
-    for (const section of issue.sections) {
-      for (const article of section.articles) {
-        if (
-          params.contentType &&
-          params.contentType !== "all" &&
-          article.content_type !== params.contentType
-        ) {
-          continue
-        }
-        if (!matchesReadingTime(article.reading_time_minutes, params.readingTime ?? "any")) continue
-        if (q) {
-          const haystack = `${article.title} ${article.summary}`.toLowerCase()
-          if (!haystack.includes(q)) continue
-        }
-        results.push({
-          article,
-          issue_id: issue.issue_id,
-          sector: issue.sector,
-          sector_slug: issue.sector_slug,
-          date: issue.date,
-          section_heading: section.heading,
-        })
+      return {
+        year,
+        issue_count: months.reduce((sum, month) => sum + month.issues.length, 0),
+        months,
       }
-    }
-  }
-
-  // Most recent first, then by section order within a day.
-  return results.sort((a, b) => b.date.localeCompare(a.date) || a.article.order - b.article.order)
-}
-
-export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  editorial: "Article",
-  sponsor: "Sponsor",
-  github_repo: "GitHub repository",
-  course: "Course",
-  tool: "Tool",
+    })
 }

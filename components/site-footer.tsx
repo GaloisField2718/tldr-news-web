@@ -1,7 +1,7 @@
-import { getManifest } from "@/lib/archive"
+import { getArchiveCatalogue } from "@/lib/archive"
 
 export function SiteFooter() {
-  const manifest = getManifest()
+  const manifest = getArchiveCatalogue()
   return (
     <footer className="mt-16 border-t border-border-strong bg-background">
       <div className="mx-auto flex max-w-5xl flex-col gap-2 px-5 py-8 text-sm text-muted-foreground md:flex-row md:items-baseline md:justify-between md:px-8">

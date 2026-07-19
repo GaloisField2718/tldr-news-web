@@ -1,9 +1,9 @@
 import Link from "next/link"
-import type { Issue } from "@/lib/types"
+import type { IssueDocument } from "@/lib/types"
 import { formatLongDate } from "@/lib/format"
 
 interface IssueHeaderProps {
-  issue: Issue
+  issue: IssueDocument
 }
 
 export function IssueHeader({ issue }: IssueHeaderProps) {

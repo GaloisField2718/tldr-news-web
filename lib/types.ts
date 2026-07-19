@@ -1,16 +1,8 @@
-// Raw generated issue contract used by tldr_news JSON files. Frontend listing
-// and search view models are defined separately below.
+// Raw generated contracts owned by GaloisField2718/tldr_news.
 
 export type ParseStatus = "complete" | "partial" | "failed"
-
 export type FormatFamily = "links_block" | "inline_url" | "unknown"
-
-export type ContentType =
-  | "editorial"
-  | "sponsor"
-  | "github_repo"
-  | "course"
-  | "tool"
+export type ContentType = "editorial" | "sponsor" | "github_repo" | "course" | "tool"
 
 export interface ParseWarning {
   code: string
@@ -23,11 +15,8 @@ export interface Article {
   order: number
   title: string
   summary: string
-  /** External destination. May be absent for malformed or unparsed entries. */
   url: string | null
-  /** Estimated reading time in minutes. May be absent when not derivable. */
   reading_time_minutes: number | null
-  /** Hostname of the linked source, e.g. "example.com". May be absent. */
   source_domain: string | null
   content_type: ContentType
   is_sponsor: boolean
@@ -40,16 +29,12 @@ export interface Section {
   articles: Article[]
 }
 
-export interface Issue {
+export interface IssueDocument {
   schema_version: string
   generator_version: string
-  /** Stable identifier, e.g. "tldr-ai:2026-07-17". */
   issue_id: string
-  /** Human-readable sector name, e.g. "TLDR AI". */
   sector: string
-  /** URL-safe sector identifier, e.g. "tldr-ai". */
   sector_slug: string
-  /** ISO date (YYYY-MM-DD). */
   date: string
   source_path: string
   source_content_hash: string
@@ -60,34 +45,80 @@ export interface Issue {
   sections: Section[]
 }
 
-/** Frontend-enriched issue summary used by archive and homepage listings. */
-export interface IssueListItem {
+export interface RawManifestEntry {
+  issue_id: string
+  sector: string
+  sector_slug: string
+  date: string
+  source_path: string
+  source_content_hash: string
+  schema_version: string
+  generator_version: string
+  format_family: FormatFamily
+  parse_status: ParseStatus
+  derived_path: string
+}
+
+export interface RawManifest {
+  schema_version: string
+  generator_version: string
+  issues: RawManifestEntry[]
+}
+
+// Frontend catalogue contracts generated from, but distinct from, the raw manifest.
+
+export interface ArchiveCatalogueEntry {
   issue_id: string
   sector: string
   sector_slug: string
   date: string
   title: string
   parse_status: ParseStatus
-  /** Denormalized counts for fast listing without loading full issues. */
+  format_family: FormatFamily
   section_count: number
   article_count: number
-}
-
-/** Frontend archive summary assembled from generated issues. */
-export interface ArchiveSummary {
-  schema_version: string
-  generator_version: string
-  /** Total issue count across the archive. */
-  total_issues: number
-  /** Distinct sectors present in the archive. */
-  sectors: SectorSummary[]
-  /** Years represented in the archive, descending. */
-  years: number[]
-  issues: IssueListItem[]
+  derived_path: string
 }
 
 export interface SectorSummary {
   sector: string
   sector_slug: string
   issue_count: number
+}
+
+export interface ArchiveSourceMetadata {
+  source_repository: string
+  requested_ref: string
+  resolved_source_commit: string
+  source_mode: "remote" | "local"
+  schema_version: string
+  generator_version: string
+  issue_count: number
+  article_count: number
+}
+
+export interface ArchiveCatalogue extends ArchiveSourceMetadata {
+  total_issues: number
+  sectors: SectorSummary[]
+  years: number[]
+  issues: ArchiveCatalogueEntry[]
+}
+
+// Compact server-side search contract. Raw issue-only fields are intentionally absent.
+
+export interface SearchDocument {
+  id: string
+  title: string
+  summary: string
+  url: string | null
+  source_domain: string | null
+  reading_time_minutes: number | null
+  content_type: ContentType
+  is_sponsor: boolean
+  issue_id: string
+  issue_date: string
+  sector: string
+  sector_slug: string
+  issue_route: string
+  section_heading: string
 }

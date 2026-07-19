@@ -1,4 +1,4 @@
-import type { Article, Issue } from "./types"
+import type { Article, IssueDocument } from "./types"
 
 // Typed fixture issues implementing the archive data contract.
 // These stand in for the normalized archive of 5,900+ historical issues.
@@ -7,7 +7,7 @@ import type { Article, Issue } from "./types"
 // Stress-test fixture: a single dense issue with 40 articles under a long
 // sector name. Exercises deep scrolling, section navigation, and mixed
 // content types / missing fields at volume.
-function makeDenseCyberIssue(): Issue {
+function makeDenseCyberIssue(): IssueDocument {
   const domains = [
     "thehackernews.com",
     "bleepingcomputer.com",
@@ -77,7 +77,7 @@ function makeDenseCyberIssue(): Issue {
   }
 }
 
-export const issues: Issue[] = [
+export const issues: IssueDocument[] = [
   makeDenseCyberIssue(),
   {
     schema_version: "1.0.0",
