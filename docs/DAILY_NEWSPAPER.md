@@ -23,6 +23,8 @@ One compressed edition is generated per date. `daily-metadata.json` records coun
 
 Only non-null HTTP(S) URLs are eligible. Canonicalization lowercases the hostname, removes fragments and the known `utm_*`, `mc_cid`, and `mc_eid` tracking parameters, and sorts all remaining parameters. It does not remove arbitrary parameters or compare titles.
 
+Repeated listings of one source article (identical issue and article ID appearing in more than one section) are merged into a single Daily article first; if any listing is sponsored, the merged article is sponsored, so a paid placement can never lose its label to a duplicate editorial listing. Duplicate groups are then scoped by presentation class (sponsored, resource, editorial) in addition to the canonical URL. Occurrences of the same URL that differ in class are never merged: a paid placement can never be presented as editorial coverage, editorial coverage can never be absorbed into the Sponsored page, and a repository, course, or tool can never swallow an editorial story. Within a group, every occurrence therefore shares the presentation class of its primary article.
+
 Null, invalid, and non-HTTP URLs remain distinct. A duplicate group retains all source occurrences. Its primary occurrence is selected by canonical sector order, section order, article order, issue ID, and article ID.
 
 ## Stable article keys
@@ -33,7 +35,7 @@ Reader keys are lowercase SHA-256 hex digests of `issue_id + "\0" + article.id`.
 
 Canonical sectors are TLDR, AI, Dev, Web Dev, InfoSec, Cybersecurity, Crypto, Product, Design, Founders, and Marketing. Unknown future sectors follow in stable slug order.
 
-The front-page lead is the first non-sponsored editorial article from TLDR, then the first editorial article in canonical order, then a non-sponsored resource. Secondary front-page stories initially take at most one from each sector. No sponsor can be a lead or normal front-page story.
+The front-page lead is the first lead-eligible (non-empty trimmed title and summary) non-sponsored editorial article from TLDR, then the first lead-eligible editorial article in canonical order, then—if nothing is eligible—the deterministic first editorial entry, then a non-sponsored resource. Lead eligibility is a stable content-completeness rule, not editorial judgment. Secondary front-page stories initially take at most one from each sector. No sponsor can be a lead or normal front-page story.
 
 Assigned front-page articles leave the pool. Remaining editorial articles continue by sector through fixed-capacity `section-lead` and `three-column` pages. Tools, repositories, and courses use `resources` pages. Sponsors use final, explicitly labelled `sponsored` pages. Continuation pages ensure long-tail entries are retained. Text length does not determine page assignment.
 
@@ -41,7 +43,7 @@ Failed empty issues remain in edition source metadata as unavailable. Partial is
 
 ## Routes and reader
 
-- `/daily` redirects to the latest readable edition.
+- `/daily` redirects to the latest readable edition. It renders an "unavailable" state only when a valid corpus contains no readable edition; corrupt or inconsistent generated data fails loudly instead of rendering that state.
 - `/daily/[date]?page=N` renders exactly one newspaper page. Page 1 has the canonical URL without a query.
 - `/daily/[date]/article/[articleKey]` renders one full stored TLDR summary.
 

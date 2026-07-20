@@ -29,6 +29,13 @@ const TRACKING_PARAMETERS = new Set([
 const RESOURCE_TYPES = new Set(["github_repo", "course", "tool"])
 const DAILY_FILE = /^\d{4}-\d{2}-\d{2}\.json\.gz$/
 
+export function presentationClass(article) {
+  if (article.is_sponsor || article.content_type === "sponsor") return "sponsor"
+  return RESOURCE_TYPES.has(article.content_type) ? "resource" : "editorial"
+}
+
+const PRESENTATION_CLASS_RANK = { editorial: 0, resource: 1, sponsor: 2 }
+
 function sectorRank(slug) {
   const index = DAILY_SECTOR_ORDER.indexOf(slug)
   return index === -1 ? DAILY_SECTOR_ORDER.length : index
@@ -120,9 +127,17 @@ function toArticle(issue, section, source, key, canonicalUrl, occurrences) {
   }
 }
 
+function leadEligible(article) {
+  return article.title.trim().length > 0 && article.summary.trim().length > 0
+}
+
 function selectFrontPage(editorial) {
   if (editorial.length === 0) return []
-  const lead = editorial.find((article) => article.sector_slug === "tldr") ?? editorial[0]
+  const lead =
+    editorial.find((article) => article.sector_slug === "tldr" && leadEligible(article)) ??
+    editorial.find((article) => leadEligible(article)) ??
+    editorial.find((article) => article.sector_slug === "tldr") ??
+    editorial[0]
   const remaining = editorial.filter((article) => article.article_key !== lead.article_key)
   const selected = [lead]
   const sectors = new Set([lead.sector_slug])
@@ -185,9 +200,35 @@ export function composeDailyEdition({ date, documents, resolvedSourceCommit, art
     }
   }
 
-  const groups = new Map()
+  // Repeated listings of the same source pair (identical issue and article ID,
+  // e.g. one placement parsed into two sections) are one article and must not
+  // split into two Daily articles sharing one key. Merge them first; if any
+  // listing is sponsored, the merged article is sponsored, so paid placements
+  // can never lose their label to a duplicate editorial listing.
+  const byKey = new Map()
   for (const candidate of candidates) {
-    const groupKey = candidate.canonicalUrl ? `url:${candidate.canonicalUrl}` : `key:${candidate.key}`
+    if (!byKey.has(candidate.key)) byKey.set(candidate.key, [])
+    byKey.get(candidate.key).push(candidate)
+  }
+  const mergedCandidates = []
+  for (const listings of byKey.values()) {
+    listings.sort(
+      (a, b) =>
+        PRESENTATION_CLASS_RANK[presentationClass(b.article)] -
+          PRESENTATION_CLASS_RANK[presentationClass(a.article)] ||
+        occurrenceCompare(a.occurrence, b.occurrence),
+    )
+    mergedCandidates.push({ ...listings[0], listings })
+  }
+
+  // Deduplication groups are scoped by presentation class in addition to the
+  // canonical URL: a sponsored placement can never merge with editorial
+  // coverage of the same URL, and resources never absorb editorial stories.
+  const groups = new Map()
+  for (const candidate of mergedCandidates) {
+    const groupKey = candidate.canonicalUrl
+      ? `${presentationClass(candidate.article)}|url:${candidate.canonicalUrl}`
+      : `key:${candidate.key}`
     if (!groups.has(groupKey)) groups.set(groupKey, [])
     groups.get(groupKey).push(candidate)
   }
@@ -196,6 +237,9 @@ export function composeDailyEdition({ date, documents, resolvedSourceCommit, art
   for (const group of groups.values()) {
     group.sort((a, b) => occurrenceCompare(a.occurrence, b.occurrence))
     const primary = group[0]
+    const occurrences = group
+      .flatMap((candidate) => candidate.listings.map((listing) => listing.occurrence))
+      .sort(occurrenceCompare)
     articles.push(
       toArticle(
         primary.issue,
@@ -203,7 +247,7 @@ export function composeDailyEdition({ date, documents, resolvedSourceCommit, art
         primary.article,
         primary.key,
         primary.canonicalUrl,
-        group.map((candidate) => candidate.occurrence),
+        occurrences,
       ),
     )
   }

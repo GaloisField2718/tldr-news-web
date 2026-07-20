@@ -5,12 +5,11 @@ import { getLatestDailyDate } from "@/lib/daily"
 export const dynamic = "force-dynamic"
 
 export default function DailyIndexPage() {
-  let latest: string | undefined
-  try {
-    latest = getLatestDailyDate()
-  } catch {
-    latest = undefined
-  }
+  // A corrupt or inconsistent Daily deployment must fail loudly rather than
+  // render an ordinary "unavailable" page: getLatestDailyDate() throws on
+  // corruption and returns undefined only for a valid corpus with no
+  // readable edition.
+  const latest = getLatestDailyDate()
   if (latest) redirect(`/daily/${latest}`)
   return (
     <div className="mx-auto max-w-3xl px-5 py-16 text-center md:px-8">

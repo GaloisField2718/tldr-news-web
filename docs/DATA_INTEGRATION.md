@@ -59,7 +59,7 @@ Measurements at the source commit above:
 
 ## Daily newspaper architecture
 
-Daily generation groups validated issues by date, applies conservative exact-URL deduplication, assigns stable SHA-256 reader keys, and composes fixed-capacity newspaper pages. `.generated/daily-metadata.json` and `.generated/daily/YYYY-MM-DD.json.gz` share the archive/search source SHA. The metadata records counts, sizes, page counts, and compressed-file checksums. Daily route functions read only these compact server-side artifacts, not every raw issue file. See [`DAILY_NEWSPAPER.md`](./DAILY_NEWSPAPER.md) for composition and reader contracts.
+Daily generation groups validated issues by date, applies conservative exact-URL deduplication scoped by presentation class (sponsored, resource, editorial), assigns stable SHA-256 reader keys, and composes fixed-capacity newspaper pages. `.generated/daily-metadata.json` and `.generated/daily/YYYY-MM-DD.json.gz` share the archive/search source SHA. The metadata records counts, sizes, page counts, and compressed-file checksums. Daily route functions read only these compact server-side artifacts, not every raw issue file. See [`DAILY_NEWSPAPER.md`](./DAILY_NEWSPAPER.md) for composition and reader contracts.
 
 The V1 newspaper is deterministic and does not express human or AI editorial judgment. Prominence follows stable fallback rules rather than assessed importance. Original articles remain on publisher websites; TLDR Index displays stored TLDR newsletter summaries and explicit outward links.
 
