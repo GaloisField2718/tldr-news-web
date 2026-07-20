@@ -18,6 +18,8 @@ async function main() {
     resolved_source_commit: checked.metadata.resolved_source_commit,
     issue_count: checked.metadata.issue_count,
     article_count: checked.metadata.article_count,
+    daily_edition_count: checked.dailyMetadata.edition_count,
+    daily_unique_article_count: checked.dailyMetadata.unique_article_count,
   }))
 }
 

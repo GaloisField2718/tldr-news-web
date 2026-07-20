@@ -137,6 +137,10 @@ async function main() {
     cache_hit: synchronized.cacheHit ?? false,
     search_uncompressed_bytes: artifacts.searchMetadata.uncompressed_bytes,
     search_gzip_bytes: artifacts.searchMetadata.gzip_bytes,
+    daily_edition_count: artifacts.dailyMetadata.edition_count,
+    daily_unique_article_count: artifacts.dailyMetadata.unique_article_count,
+    daily_uncompressed_bytes: artifacts.dailyMetadata.uncompressed_bytes,
+    daily_gzip_bytes: artifacts.dailyMetadata.gzip_bytes,
   }, null, 2))
 }
 

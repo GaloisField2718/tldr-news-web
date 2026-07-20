@@ -16,6 +16,22 @@ interface SearchMetadata {
   gzip_bytes: number
   segments: Array<{ year: number; file: string; gzip_bytes: number }>
 }
+interface DailyMetadata {
+  resolved_source_commit: string
+  edition_count: number
+  article_occurrence_count: number
+  unique_article_count: number
+  gzip_bytes: number
+  uncompressed_bytes: number
+  dates: Array<{
+    date: string
+    file: string
+    unique_article_count: number
+    page_count: number
+    gzip_bytes: number
+    uncompressed_bytes: number
+  }>
+}
 interface ValidationResult {
   manifest: { schema_version: string; generator_version: string }
   documents: Array<{ entry: unknown; issue: unknown }>
@@ -26,6 +42,7 @@ interface GenerationResult {
   metadata: SourceMetadata
   catalogue: SourceMetadata & { total_issues: number }
   searchMetadata: SearchMetadata
+  dailyMetadata: DailyMetadata
 }
 
 export const SUPPORTED_SCHEMA_VERSION: string

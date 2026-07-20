@@ -3,12 +3,14 @@ import { SearchField } from "@/components/search-field"
 import { SectorNav } from "@/components/sector-nav"
 import { IssueList } from "@/components/issue-list"
 import { getLatestIssues, getSectors, getYears, getArchiveCatalogue } from "@/lib/archive"
+import { getLatestDailyDate } from "@/lib/daily"
 
 export default function HomePage() {
   const latest = getLatestIssues(6)
   const sectors = getSectors()
   const years = getYears()
   const manifest = getArchiveCatalogue()
+  const latestDailyDate = getLatestDailyDate()
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-10 md:px-8 md:py-14">
@@ -29,6 +31,13 @@ export default function HomePage() {
         <div className="mt-3 max-w-2xl">
           <SearchField size="lg" />
         </div>
+        {latestDailyDate && (
+          <p className="mt-5 border-t border-border pt-4 font-serif text-lg">
+            <Link href={`/daily/${latestDailyDate}`} className="underline decoration-border-strong underline-offset-4 hover:text-accent hover:decoration-accent">
+              Read today’s Daily Index →
+            </Link>
+          </p>
+        )}
       </section>
 
       <div className="grid grid-cols-1 gap-x-12 gap-y-12 pt-10 lg:grid-cols-[1fr_15rem]">

@@ -82,4 +82,149 @@
     color: inherit;
     text-decoration: none;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+}
+
+/* Daily Index newspaper viewer */
+.daily-viewer {
+  margin: 0 auto;
+  max-width: 92rem;
+  padding: 1rem;
+}
+
+.daily-toolbar {
+  margin: 0 auto 1rem;
+  max-width: 82rem;
+  border-block: 1px solid var(--border-strong);
+  background: var(--background);
+  font-family: var(--font-sans);
+  font-size: .75rem;
+}
+
+.daily-toolbar-row,
+.daily-edition-nav,
+.daily-inline-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.daily-toolbar-row { padding: .65rem .25rem; }
+.daily-toolbar-actions { border-top: 1px solid var(--border); }
+.daily-toolbar a,
+.daily-contents summary { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.daily-toolbar a:hover,
+.daily-contents summary:hover { color: var(--accent); }
+.daily-toolbar-link { font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.daily-page-count { font-family: var(--font-mono); font-weight: 500; }
+.daily-toolbar-date { color: var(--muted-foreground); }
+.daily-inline-nav { flex: 1; }
+.daily-inline-nav > span,
+.daily-edition-nav > span:not(:has(a)) { color: var(--faint-foreground); }
+.daily-contents { position: relative; }
+.daily-contents > ol {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  width: min(25rem, 86vw);
+  max-height: 65vh;
+  overflow: auto;
+  margin-top: .6rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  box-shadow: 0 8px 20px rgb(26 25 23 / .12);
+}
+.daily-contents li + li { border-top: 1px solid var(--border); }
+.daily-contents li a { display: flex; flex-direction: column; gap: .2rem; padding: .7rem; text-decoration: none; }
+.daily-contents li a[aria-current="page"] { border-left: 3px solid var(--accent); background: var(--accent-soft); }
+.daily-contents small { color: var(--muted-foreground); }
+.daily-edition-nav { border-top: 1px solid var(--border); padding: .65rem .25rem; }
+
+.newspaper-sheet {
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2.75rem);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  box-shadow: 0 8px 28px rgb(26 25 23 / .08);
+}
+.newspaper-masthead { border-top: 5px solid var(--foreground); border-bottom: 3px double var(--foreground); }
+.newspaper-edition-label { padding-top: .5rem; text-align: center; font: 500 .65rem/1.2 var(--font-mono); letter-spacing: .18em; text-transform: uppercase; }
+.newspaper-masthead h1 { padding: .35rem 0 .45rem; text-align: center; font: 700 clamp(2.3rem, 6vw, 5.5rem)/.9 var(--font-serif); letter-spacing: -.055em; }
+.newspaper-deck { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--foreground); padding: .45rem 0; font: 500 .7rem/1.4 var(--font-sans); text-transform: uppercase; letter-spacing: .05em; }
+.newspaper-deck time { white-space: nowrap; }
+.newspaper-page-heading { border-bottom: 2px solid var(--foreground); padding: 1.25rem 0 .6rem; }
+.newspaper-page-heading p { font: 600 .65rem/1.2 var(--font-sans); color: var(--accent); text-transform: uppercase; letter-spacing: .15em; }
+.newspaper-page-heading h2 { margin-top: .2rem; font: 650 clamp(1.8rem, 4vw, 3.2rem)/1 var(--font-serif); }
+.newspaper-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: start; }
+.daily-story { grid-column: span 4; min-width: 0; padding: 1.1rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border-strong); }
+.daily-story:nth-child(3n) { border-right: 0; }
+.daily-story-lead { grid-column: span 8; padding-left: 0; }
+.daily-story-secondary { grid-column: span 4; }
+.daily-story-brief { grid-column: span 3; }
+.daily-story-resource,
+.daily-story-sponsor { grid-column: span 4; }
+.daily-story-sponsor { border-top: 3px solid var(--accent); background: var(--accent-soft); }
+.daily-story-label { margin-bottom: .4rem; font: 600 .62rem/1.3 var(--font-sans); color: var(--accent); text-transform: uppercase; letter-spacing: .12em; }
+.daily-story h3 { font: 650 1.35rem/1.08 var(--font-serif); text-wrap: balance; overflow-wrap: anywhere; }
+.daily-story-lead h3 { font-size: clamp(2rem, 4vw, 3.8rem); line-height: .98; }
+.daily-story-secondary h3 { font-size: 1.65rem; }
+.daily-story h3 a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.daily-story-summary { margin-top: .65rem; font: 400 .9rem/1.5 var(--font-serif); color: var(--muted-foreground); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+.daily-story-lead .daily-story-summary { max-width: 48rem; font-size: 1.05rem; -webkit-line-clamp: 5; }
+.daily-story-brief .daily-story-summary { -webkit-line-clamp: 2; }
+.daily-story-empty { margin-top: .5rem; font: italic .8rem var(--font-serif); color: var(--faint-foreground); }
+.daily-story-meta { margin-top: .65rem; font: 400 .63rem/1.3 var(--font-mono); color: var(--faint-foreground); overflow-wrap: anywhere; }
+.newspaper-page-footer { display: flex; justify-content: space-between; border-bottom: 4px solid var(--foreground); padding: .75rem 0 .45rem; font: 500 .65rem var(--font-mono); text-transform: uppercase; letter-spacing: .12em; }
+
+.daily-reader-shell { max-width: 66rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
+.daily-reader-toolbar,
+.daily-reader-pager { display: flex; justify-content: space-between; gap: 1rem; border-block: 1px solid var(--border-strong); padding: .8rem 0; font: 500 .75rem var(--font-sans); }
+.daily-reader-toolbar a,
+.daily-reader-pager a { text-decoration: underline; text-underline-offset: 3px; }
+.daily-reader { max-width: 46rem; margin: 0 auto; padding: clamp(2.5rem, 8vw, 6rem) 0; }
+.daily-reader-kicker { font: 600 .7rem var(--font-sans); color: var(--accent); text-transform: uppercase; letter-spacing: .14em; }
+.daily-reader h1 { margin-top: .75rem; font: 650 clamp(2.5rem, 7vw, 5rem)/.98 var(--font-serif); letter-spacing: -.025em; text-wrap: balance; overflow-wrap: anywhere; }
+.daily-reader-meta { display: flex; flex-wrap: wrap; gap: .45rem 1rem; margin-top: 1.2rem; padding-block: .8rem; border-block: 1px solid var(--border); font: 400 .7rem var(--font-mono); color: var(--muted-foreground); }
+.daily-reader-summary { margin-top: 2.5rem; }
+.daily-reader-summary h2,
+.daily-reader-occurrences h2 { font: 600 .7rem var(--font-sans); text-transform: uppercase; letter-spacing: .12em; color: var(--muted-foreground); }
+.daily-reader-summary > p { margin-top: 1rem; font: 400 clamp(1.2rem, 2vw, 1.4rem)/1.75 var(--font-serif); white-space: pre-line; }
+.daily-reader-unavailable { color: var(--faint-foreground); font-style: italic !important; }
+.daily-reader-occurrences { margin-top: 2.5rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.daily-reader-occurrences ul { margin-top: .6rem; font-size: .85rem; color: var(--muted-foreground); }
+.daily-reader-occurrences a { text-decoration: underline; text-underline-offset: 3px; }
+.daily-reader-actions { display: flex; flex-direction: column; align-items: flex-start; gap: .8rem; margin-top: 2.5rem; border-top: 2px solid var(--foreground); padding-top: 1.25rem; font-size: .9rem; }
+.daily-reader-actions a:first-child { font-weight: 600; color: var(--accent); }
+.daily-reader-actions a { text-decoration: underline; text-underline-offset: 4px; }
+
+@media (max-width: 700px) {
+  .daily-viewer { padding: 0 0 1rem; }
+  .daily-toolbar { position: sticky; top: 0; z-index: 15; margin: 0; padding-inline: .75rem; }
+  .daily-toolbar-actions { align-items: flex-start; }
+  .daily-inline-nav { font-size: .7rem; }
+  .daily-toolbar-date { display: none; }
+  .daily-edition-nav { font-size: .68rem; }
+  .newspaper-sheet { border-inline: 0; padding: 1rem; box-shadow: none; }
+  .newspaper-masthead h1 { font-size: clamp(2.25rem, 13vw, 3.4rem); }
+  .newspaper-deck { flex-direction: column; align-items: center; gap: .25rem; text-align: center; font-size: .6rem; }
+  .newspaper-grid { display: block; }
+  .daily-story,
+  .daily-story-lead,
+  .daily-story-secondary,
+  .daily-story-brief,
+  .daily-story-resource,
+  .daily-story-sponsor { padding: 1.15rem 0; border-right: 0; }
+  .daily-story-lead h3 { font-size: 2.25rem; }
+  .daily-story-secondary h3 { font-size: 1.7rem; }
+  .daily-story h3 { font-size: 1.45rem; }
+  .daily-story-brief .daily-story-summary { -webkit-line-clamp: 3; }
+  .daily-story-sponsor { padding-inline: .75rem; }
+  .daily-reader-shell { padding-inline: 1rem; }
+  .daily-reader-pager { font-size: .68rem; }
 }
