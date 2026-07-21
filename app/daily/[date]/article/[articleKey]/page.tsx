@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getDailyArticlePosition, isValidDailyDate } from "@/lib/daily"
+import { dailyPageHref } from "@/lib/daily-navigation"
 
 export const dynamic = "force-dynamic"
 
@@ -13,10 +14,6 @@ const CONTENT_LABELS: Record<string, string> = {
   github_repo: "GitHub repository",
   course: "Course",
   tool: "Tool",
-}
-
-function pageHref(date: string, page: number): string {
-  return page === 1 ? `/daily/${date}` : `/daily/${date}?page=${page}`
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -46,7 +43,7 @@ export default async function DailyArticlePage({ params }: PageProps) {
   return (
     <div className="daily-reader-shell">
       <nav aria-label="Daily reader" className="daily-reader-toolbar">
-        <Link href={pageHref(date, position.page)}>← Back to page {position.page}</Link>
+        <Link href={dailyPageHref(date, position.page)}>← Back to page {position.page}</Link>
         <span>{position.index + 1} of {position.total}</span>
       </nav>
       <article className="daily-reader">
@@ -90,7 +87,7 @@ export default async function DailyArticlePage({ params }: PageProps) {
       </article>
       <nav aria-label="Articles in this edition" className="daily-reader-pager">
         {position.previousKey ? <Link href={`/daily/${date}/article/${position.previousKey}`}>← Previous article</Link> : <span aria-disabled="true">← Previous article</span>}
-        <Link href={pageHref(date, position.page)}>Newspaper page {position.page}</Link>
+        <Link href={dailyPageHref(date, position.page)}>Newspaper page {position.page}</Link>
         {position.nextKey ? <Link href={`/daily/${date}/article/${position.nextKey}`}>Next article →</Link> : <span aria-disabled="true">Next article →</span>}
       </nav>
     </div>

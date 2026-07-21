@@ -1,54 +1,85 @@
+import type { RefObject } from "react"
 import Link from "next/link"
-import type { DailyEdition } from "@/lib/daily-types"
-
-function pageHref(date: string, page: number): string {
-  return page === 1 ? `/daily/${date}` : `/daily/${date}?page=${page}`
-}
+import type { DailyEditionNavigation } from "@/lib/daily-navigation"
 
 export function DailyToolbar({
-  edition,
-  page,
-  previousDate,
-  nextDate,
-  latestDate,
+  navigation,
+  immersive,
+  contentsRef,
+  fullscreenButtonRef,
+  onShare,
+  onToggleImmersive,
 }: {
-  edition: DailyEdition
-  page: number
-  previousDate?: string
-  nextDate?: string
-  latestDate?: string
+  navigation: DailyEditionNavigation
+  immersive: boolean
+  contentsRef: RefObject<HTMLDetailsElement | null>
+  fullscreenButtonRef: RefObject<HTMLButtonElement | null>
+  onShare: () => void
+  onToggleImmersive: () => void
 }) {
-  const pageCount = edition.pages.length
   return (
-    <div className="daily-toolbar">
-      <div className="daily-toolbar-row">
+    <div className="daily-toolbar" data-daily-toolbar>
+      <div className="daily-toolbar-primary">
         <Link href="/daily" className="daily-toolbar-link">Daily Editions</Link>
-        <span className="daily-page-count">{page} of {pageCount}</span>
-        <span className="daily-toolbar-date">{edition.date}</span>
-      </div>
-      <div className="daily-toolbar-row daily-toolbar-actions">
+        <time dateTime={navigation.date} className="daily-toolbar-date">{navigation.formattedDate}</time>
         <nav aria-label="Newspaper pages" className="daily-inline-nav">
-          {page > 1 ? <Link rel="prev" href={pageHref(edition.date, page - 1)}>← Previous page</Link> : <span aria-disabled="true">← Previous page</span>}
-          {page < pageCount ? <Link rel="next" href={pageHref(edition.date, page + 1)}>Next page →</Link> : <span aria-disabled="true">Next page →</span>}
+          {navigation.previousPageHref ? (
+            <Link rel="prev" href={navigation.previousPageHref} aria-label="Previous newspaper page">
+              <span aria-hidden="true">←</span><span className="daily-nav-label"> Previous</span>
+            </Link>
+          ) : <span aria-disabled="true"><span aria-hidden="true">←</span><span className="daily-nav-label"> Previous</span></span>}
+          <span className="daily-page-count">Page {navigation.currentPage} of {navigation.pageCount}</span>
+          {navigation.nextPageHref ? (
+            <Link rel="next" href={navigation.nextPageHref} aria-label="Next newspaper page">
+              <span className="daily-nav-label">Next </span><span aria-hidden="true">→</span>
+            </Link>
+          ) : <span aria-disabled="true"><span className="daily-nav-label">Next </span><span aria-hidden="true">→</span></span>}
         </nav>
-        <details className="daily-contents">
+        <details className="daily-contents" ref={contentsRef}>
           <summary>Contents</summary>
           <ol>
-            {edition.pages.map((item) => (
+            {navigation.pages.map((item) => (
               <li key={item.number}>
-                <Link href={pageHref(edition.date, item.number)} aria-current={item.number === page ? "page" : undefined}>
-                  <span>Page {item.number}: {item.title ?? "Daily Edition"}</span>
-                  <small>{item.sectors.join(", ") || "Daily Index"} · {item.slots.length} stories</small>
+                <Link href={item.href} aria-current={item.number === navigation.currentPage ? "page" : undefined}>
+                  <span>Page {item.number}: {item.title}</span>
+                  <small>{item.sectors.join(", ") || "Daily Index"} · {item.storyCount} stories</small>
                 </Link>
               </li>
             ))}
           </ol>
         </details>
+        <button type="button" className="daily-toolbar-button" onClick={onShare}>Share</button>
+        <button
+          ref={fullscreenButtonRef}
+          type="button"
+          className="daily-toolbar-button daily-fullscreen-button"
+          aria-pressed={immersive}
+          onClick={onToggleImmersive}
+        >
+          {immersive ? "Exit" : "Full screen"}
+        </button>
+        <details className="daily-help">
+          <summary aria-label="Keyboard shortcuts">?</summary>
+          <div>
+            <strong>Keyboard shortcuts</strong>
+            <dl>
+              <dt>← / →</dt><dd>Previous / next page</dd>
+              <dt>↑ / ↓</dt><dd>Scroll while full screen</dd>
+              <dt>PgUp / PgDn</dt><dd>Scroll by viewport</dd>
+              <dt>Space</dt><dd>Scroll down by viewport</dd>
+              <dt>Shift+Space</dt><dd>Scroll up by viewport</dd>
+              <dt>Home</dt><dd>First page</dd>
+              <dt>End</dt><dd>Last page</dd>
+              <dt>F</dt><dd>Full screen</dd>
+              <dt>Escape</dt><dd>Exit immersive mode</dd>
+            </dl>
+          </div>
+        </details>
       </div>
       <nav aria-label="Daily editions" className="daily-edition-nav">
-        {previousDate ? <Link href={`/daily/${previousDate}`}>← Previous edition</Link> : <span aria-disabled="true">← Previous edition</span>}
-        {latestDate && latestDate !== edition.date ? <Link href={`/daily/${latestDate}`}>Latest edition</Link> : <span aria-disabled="true">Latest edition</span>}
-        {nextDate ? <Link href={`/daily/${nextDate}`}>Next edition →</Link> : <span aria-disabled="true">Next edition →</span>}
+        {navigation.previousEditionHref ? <Link href={navigation.previousEditionHref}>← Previous edition</Link> : <span aria-disabled="true">← Previous edition</span>}
+        {navigation.latestEditionHref ? <Link href={navigation.latestEditionHref}>Latest edition</Link> : <span aria-disabled="true">Latest edition</span>}
+        {navigation.nextEditionHref ? <Link href={navigation.nextEditionHref}>Next edition →</Link> : <span aria-disabled="true">Next edition →</span>}
       </nav>
     </div>
   )

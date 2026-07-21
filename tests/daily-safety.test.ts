@@ -38,6 +38,7 @@ describe("Daily production safety", () => {
       ...(await filesBelow("app/daily")),
       path.join(ROOT, "lib/daily.ts"),
       path.join(ROOT, "components/daily-toolbar.tsx"),
+      path.join(ROOT, "components/daily-edition-shell.tsx"),
       path.join(ROOT, "components/newspaper-page.tsx"),
     ]
     for (const file of files) expect(await readFile(file, "utf8")).not.toMatch(/fixtures|tests\/helpers/)
@@ -49,8 +50,40 @@ describe("Daily production safety", () => {
     for (const span of [3, 4, 6, 8, 12]) expect(css).toContain(`.daily-story-span-${span}`)
   })
 
+  it("keeps the client boundary compact and selected-page-only", async () => {
+    const route = await readFile(path.join(ROOT, "app/daily/[date]/page.tsx"), "utf8")
+    expect(route).toContain("<DailyEditionShell navigation={navigation}>")
+    expect(route).not.toMatch(/<DailyEditionShell[^>]*edition=/)
+    expect(route).toContain("selectedKeys.has(article.article_key)")
+    const navigation = await readFile(path.join(ROOT, "lib/daily-navigation.ts"), "utf8")
+    expect(navigation).not.toMatch(/DailyArticle|articles:/)
+  })
+
+  it("adds stable immersive selectors without unsafe HTML", async () => {
+    expect(await readFile(path.join(ROOT, "components/site-header.tsx"), "utf8")).toContain("data-site-header")
+    expect(await readFile(path.join(ROOT, "components/site-footer.tsx"), "utf8")).toContain("data-site-footer")
+    for (const file of [
+      path.join(ROOT, "components/daily-edition-shell.tsx"),
+      path.join(ROOT, "components/daily-toolbar.tsx"),
+    ]) expect(await readFile(file, "utf8")).not.toContain("dangerouslySetInnerHTML")
+  })
+
+  it("bounds native and fallback immersive shells as vertical 100dvh viewports", async () => {
+    const css = await readFile(path.join(ROOT, "app/globals.css"), "utf8")
+    for (const kind of ["fallback", "native"]) {
+      const block = css.match(new RegExp(`body\\[data-daily-immersive="${kind}"\\] \\.daily-immersive-shell \\{([^}]*)\\}`))?.[1]
+      expect(block).toBeDefined()
+      expect(block).toContain("height: 100dvh")
+      expect(block).toContain("max-height: 100dvh")
+      expect(block).toContain("overflow-x: hidden")
+      expect(block).toContain("overflow-y: auto")
+      expect(block).toContain("overscroll-behavior: contain")
+      expect(block).not.toContain("min-height")
+    }
+  })
+
   it("has no client Daily module importing filesystem or raw corpus data", async () => {
-    const files = [...(await filesBelow("app/daily")), path.join(ROOT, "components/daily-toolbar.tsx"), path.join(ROOT, "components/newspaper-page.tsx")]
+    const files = [...(await filesBelow("app/daily")), path.join(ROOT, "components/daily-toolbar.tsx"), path.join(ROOT, "components/daily-edition-shell.tsx"), path.join(ROOT, "components/newspaper-page.tsx")]
     for (const file of files) {
       const source = await readFile(file, "utf8")
       if (/^["']use client["']/m.test(source)) {

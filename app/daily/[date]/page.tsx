@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { DailyToolbar } from "@/components/daily-toolbar"
+import { DailyEditionShell } from "@/components/daily-edition-shell"
 import { NewspaperPage } from "@/components/newspaper-page"
+import { createDailyEditionNavigation } from "@/lib/daily-navigation"
 import {
   getDailyEdition,
   getLatestDailyDate,
@@ -27,6 +28,15 @@ function formatDate(date: string): string {
     weekday: "long",
     year: "numeric",
     month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`))
+}
+
+function formatToolbarDate(date: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
     day: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00Z`))
@@ -64,17 +74,21 @@ export default async function DailyEditionPage({ params, searchParams }: PagePro
   const selected = edition.pages[requestedPage - 1]
   const selectedKeys = new Set(selected.slots.map((slot) => slot.article_key))
   const articles = edition.articles.filter((article) => selectedKeys.has(article.article_key))
+  const navigation = createDailyEditionNavigation({
+    date,
+    formattedDate: formatToolbarDate(date),
+    currentPage: requestedPage,
+    pages: edition.pages,
+    previousDate: getPreviousDailyDate(date),
+    nextDate: getNextDailyDate(date),
+    latestDate: getLatestDailyDate(),
+  })
 
   return (
     <div className="daily-viewer">
-      <DailyToolbar
-        edition={edition}
-        page={requestedPage}
-        previousDate={getPreviousDailyDate(date)}
-        nextDate={getNextDailyDate(date)}
-        latestDate={getLatestDailyDate()}
-      />
-      <NewspaperPage page={selected} articles={articles} formattedDate={formatDate(date)} />
+      <DailyEditionShell navigation={navigation}>
+        <NewspaperPage page={selected} articles={articles} formattedDate={formatDate(date)} />
+      </DailyEditionShell>
     </div>
   )
 }
