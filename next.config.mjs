@@ -4,6 +4,8 @@ const nextConfig = {
     "/*": ["./.generated/archive-*.json"],
     "/issues/[sector]/[date]": ["./.generated/issues/**/*.json"],
     "/search": ["./.generated/search-metadata.json", "./.generated/search/*.json.gz"],
+    "/daily": ["./.generated/daily-metadata.json"],
+    "/daily/**": ["./.generated/daily-metadata.json", "./.generated/daily/*.json.gz"],
   },
 }
 

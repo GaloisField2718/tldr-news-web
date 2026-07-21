@@ -4,7 +4,7 @@
 
 `GaloisField2718/tldr_news` owns newsletter ingestion, parsing, normalization, and the generated data contract. Its `generated/` directory is the sole source of truth.
 
-`tldr-news-web` owns presentation, catalogue generation, and search. It does not modify source data or parser behavior. The full source dataset and generated search files are not committed to this repository.
+`tldr-news-web` owns presentation, catalogue generation, search, and deterministic Daily newspaper composition. It does not modify source data or parser behavior. The full source dataset and generated search or Daily files are not committed to this repository.
 
 ## Synchronization flow
 
@@ -15,7 +15,7 @@
 3. Check out only `generated/` at that exact SHA.
 4. Strictly validate the manifest and every issue document.
 5. Store the source files under `.cache/tldr-data/<sha>/generated/`.
-6. Generate `.generated/archive-metadata.json`, `archive-catalogue.json`, and deterministic gzip search segments under `.generated/search/`.
+6. Generate `.generated/archive-metadata.json`, `archive-catalogue.json`, deterministic gzip search segments under `.generated/search/`, and one compressed Daily edition per date under `.generated/daily/`.
 
 No issue file is subsequently read from a moving branch URL. Synchronization uses public, read-only Git access and requires no token. Temporary `.sync-*` directories are removed before and after synchronization. Both `.cache/` and `.generated/` are gitignored.
 
@@ -57,6 +57,12 @@ Measurements at the source commit above:
 
 **Rejected: an additional static search engine.** The measured 93,081-document corpus is straightforward to scan server-side and does not justify another dependency or index format in this bounded integration.
 
+## Daily newspaper architecture
+
+Daily generation groups validated issues by date, applies conservative exact-URL deduplication scoped by presentation class (sponsored, resource, editorial), assigns stable SHA-256 reader keys, and composes fixed-capacity newspaper pages. `.generated/daily-metadata.json` and `.generated/daily/YYYY-MM-DD.json.gz` share the archive/search source SHA. The metadata records counts, sizes, page counts, and compressed-file checksums. Daily route functions read only these compact server-side artifacts, not every raw issue file. See [`DAILY_NEWSPAPER.md`](./DAILY_NEWSPAPER.md) for composition and reader contracts.
+
+The V1 newspaper is deterministic and does not express human or AI editorial judgment. Prominence follows stable fallback rules rather than assessed importance. Original articles remain on publisher websites; TLDR Index displays stored TLDR newsletter summaries and explicit outward links.
+
 ## Local development
 
 ```sh
@@ -72,7 +78,7 @@ TLDR_DATA_LOCAL_PATH=/path/to/tldr_news/generated npm run data:sync
 npm run dev
 ```
 
-`npm run data:check` revalidates the cached source, checks generated counts and source-SHA consistency, and verifies search-segment checksums.
+`npm run data:check` revalidates the cached source, checks generated counts and source-SHA consistency, verifies search-segment and Daily-edition checksums, and validates exact Daily page assignment.
 
 The application intentionally fails with a clear `npm run data:sync` instruction if real generated data is absent. There is no fixture fallback in production.
 
@@ -99,7 +105,7 @@ Each synchronization resolves the requested ref again. A new SHA creates a new i
 
 ## Failure modes
 
-Synchronization fails before artifact replacement when the ref cannot be resolved, public Git retrieval is incomplete, the manifest is absent/malformed, the schema is unsupported, any issue is missing or malformed, paths escape `generated/`, counts differ, or raw contracts disagree. Runtime loading also verifies catalogue/issue identity and catalogue/search source SHA consistency.
+Synchronization fails before artifact replacement when the ref cannot be resolved, public Git retrieval is incomplete, the manifest is absent/malformed, the schema is unsupported, any issue is missing or malformed, paths escape `generated/`, counts differ, or raw contracts disagree. Runtime loading also verifies catalogue/issue identity and catalogue/search/Daily source SHA consistency.
 
 Failed source issues with no useful sections remain valid archive records and render a restrained preservation message. Source-data anomalies are not repaired by this application.
 

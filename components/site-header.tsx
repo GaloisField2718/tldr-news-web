@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 const NAV = [
+  { href: "/daily", label: "Daily" },
   { href: "/", label: "Browse" },
   { href: "/archive", label: "Archive" },
   { href: "/search", label: "Search" },
@@ -9,7 +10,7 @@ const NAV = [
 export function SiteHeader() {
   return (
     <header className="border-b border-border-strong bg-background">
-      <div className="mx-auto flex max-w-5xl items-baseline justify-between gap-6 px-5 py-4 md:px-8">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-3 px-4 py-4 sm:flex-nowrap sm:gap-6 sm:px-5 md:px-8">
         <Link href="/" className="group">
           <span className="font-serif text-xl font-semibold tracking-tight text-foreground">
             TLDR Index
@@ -17,7 +18,7 @@ export function SiteHeader() {
         </Link>
 
         <nav aria-label="Primary">
-          <ul className="flex items-baseline gap-5 text-sm md:gap-7">
+          <ul className="flex flex-wrap items-baseline gap-3 text-xs sm:flex-nowrap sm:gap-5 sm:text-sm md:gap-7">
             {NAV.map((item) => (
               <li key={item.href}>
                 <Link

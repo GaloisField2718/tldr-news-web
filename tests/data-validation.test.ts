@@ -115,5 +115,6 @@ describe("source synchronization validation", () => {
     expect(result.metadata.resolved_source_commit).toBe("a".repeat(40))
     expect(result.catalogue.resolved_source_commit).toBe(result.metadata.resolved_source_commit)
     expect(result.searchMetadata.resolved_source_commit).toBe(result.metadata.resolved_source_commit)
+    expect(result.dailyMetadata.resolved_source_commit).toBe(result.metadata.resolved_source_commit)
   })
 })

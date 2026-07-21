@@ -11,6 +11,7 @@ import {
   writeFile,
 } from "node:fs/promises"
 import path from "node:path"
+import { assertDailyArtifacts, generateDailyArtifacts } from "./daily-data-lib.mjs"
 
 export const SUPPORTED_SCHEMA_VERSION = "1.0.0"
 export const PARSE_STATUSES = new Set(["complete", "partial", "failed"])
@@ -411,10 +412,15 @@ export async function generateFrontendArtifacts({
     segments,
   }
   await writeJson(path.join(temporary, "search-metadata.json"), searchMetadata)
+  const dailyMetadata = await generateDailyArtifacts({
+    documents: validated.documents,
+    outputDir: temporary,
+    resolvedSourceCommit,
+  })
 
   await rm(output, { recursive: true, force: true })
   await rename(temporary, output)
-  return { metadata, catalogue, searchMetadata }
+  return { metadata, catalogue, searchMetadata, dailyMetadata }
 }
 
 export async function copyGeneratedDataset(source, destination) {
@@ -438,5 +444,7 @@ export async function assertFrontendArtifacts({ generatedDir, outputDir }) {
     const bytes = await readFile(file)
     if (createHash("sha256").update(bytes).digest("hex") !== segment.sha256) fail(`search segment checksum mismatch: ${segment.file}`)
   }
-  return { metadata, catalogue, searchMetadata }
+  const dailyMetadata = await assertDailyArtifacts({ outputDir, resolvedSourceCommit: sha })
+  if (dailyMetadata.article_occurrence_count !== validated.articleCount) fail("Daily occurrence count is inconsistent")
+  return { metadata, catalogue, searchMetadata, dailyMetadata }
 }
