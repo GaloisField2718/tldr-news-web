@@ -9,7 +9,7 @@ const NAV = [
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-border-strong bg-background">
+    <header data-site-header className="border-b border-border-strong bg-background">
       <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-3 px-4 py-4 sm:flex-nowrap sm:gap-6 sm:px-5 md:px-8">
         <Link href="/" className="group">
           <span className="font-serif text-xl font-semibold tracking-tight text-foreground">

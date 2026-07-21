@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import DailyEditionPage from "@/app/daily/[date]/page"
 import DailyArticlePage from "@/app/daily/[date]/article/[articleKey]/page"
 import HomePage from "@/app/page"
@@ -19,6 +19,15 @@ import {
 import { dailyArticleKey } from "../scripts/daily-data-lib.mjs"
 import { generateFrontendArtifacts } from "../scripts/tldr-data-lib.mjs"
 import { makeArticle, makeIssue, writeDataset } from "./helpers/dataset"
+
+vi.mock("next/navigation", async (importOriginal) => {
+  const original = await importOriginal<typeof import("next/navigation")>()
+  return {
+    ...original,
+    usePathname: () => "/daily/2026-09-02",
+    useRouter: () => ({ push: vi.fn() }),
+  }
+})
 
 let temporary: string
 const latestDate = "2026-09-02"
@@ -99,9 +108,22 @@ describe("Daily rendering", () => {
     expect(html).toContain("daily-story-span-8")
     expect(html).toContain("daily-story-span-4")
     expect(html).toContain("daily-story-span-3")
-    expect(html).toMatch(/daily-page-count[^>]*>1 of/)
+    expect(html).toMatch(/daily-page-count[^>]*>Page 1 of/)
     expect(html).not.toMatch(/daily-page-count[^>]*aria-current/)
     expect(html).toContain('aria-disabled="true"')
+    expect(html).toContain('aria-label="Next newspaper page"')
+    expect(html).toContain("daily-side-arrow-next")
+    expect(html).not.toContain("daily-side-arrow-previous")
+    expect(html).toContain('aria-pressed="false"')
+    expect(html).toContain("Keyboard shortcuts")
+    expect(html).toContain(">Share</button>")
+  })
+
+  it("omits unavailable side navigation at the final page", async () => {
+    const html = renderToStaticMarkup(await DailyEditionPage({ params: Promise.resolve({ date: latestDate }), searchParams: Promise.resolve({ page: "4" }) }))
+    expect(html).toContain("daily-side-arrow-previous")
+    expect(html).not.toContain("daily-side-arrow-next")
+    expect(html).toContain("Previous newspaper page")
   })
 
   it("omits page=1 from canonical newspaper links", async () => {

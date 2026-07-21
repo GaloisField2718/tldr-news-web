@@ -49,13 +49,34 @@ Failed empty issues remain in edition source metadata as unavailable. Partial is
 
 The reader returns to the article's generated newspaper page, provides deterministic previous/next article links, identifies duplicate newsletter occurrences, links to the archived issue, and links outward when an original URL exists. Original articles remain on publishers' websites. TLDR Index displays stored newsletter summaries—it does not scrape or reproduce full articles.
 
+## Immersive navigation
+
+The newspaper retains canonical URL navigation: page 1 is `/daily/YYYY-MM-DD`, and later pages use `?page=N`. Normal previous/next links, Contents links, edition links, story links, direct loading, and browser history work without JavaScript.
+
+A compact client shell adds convenience without changing composition or data generation. The server still validates the edition, selects one page, and renders only that page's article previews. The client receives only the date, formatted date, current/page counts, canonical destinations, and compact Contents entries (page number, title, sectors, story count, and href). It never receives the complete `DailyEdition`, articles from other pages, raw issue documents, or compressed artifacts.
+
+Keyboard shortcuts are:
+
+- `ArrowLeft` / `ArrowRight`: previous / next page;
+- `Home` / `End`: first / last page;
+- `F`: enter or leave immersive mode;
+- `Escape`: leave CSS fallback immersive mode (and the browser retains its normal native-fullscreen Escape behavior).
+
+Shortcuts are ignored for modified keystrokes, controls and links, editable content, open Contents, active text selections, or already-handled events. Wide desktops also expose 44×44-pixel semantic side-arrow links outside the paper.
+
+A one-touch mobile gesture is accepted only after at least 65 pixels of horizontal movement and a horizontal-to-vertical ratio of at least 1.5. Multi-touch, cancelled, short, vertical, ambiguous, selected-text, boundary, and interactive-element gestures do nothing. The implementation never prevents ordinary vertical scrolling.
+
+The user-initiated **Full screen** control first requests the native Fullscreen API. If the API is absent or rejects (including common Safari/iOS limitations), a `100dvh` CSS fallback fixes a scrollable Daily layer above the site and hides site chrome through stable data attributes. Both modes restore body overflow and site chrome on exit or unmount, preserve focus, and remain active across numbered-page query navigation.
+
+**Share** uses the native Share API when available and otherwise copies the exact canonical current-page URL. Cancellation, copied-link success, and unavailable APIs receive restrained polite feedback. A first-visit fine-pointer hint advertises shortcuts; persistent native `details` help remains keyboard accessible.
+
 ## Output-file tracing
 
 Daily route traces include `daily-metadata.json` and compressed daily editions. Daily routes do not need raw `.generated/issues/` documents. Daily and search artifacts remain server-only and are never placed under `public/` or imported by client components.
 
 ## Responsive strategy
 
-Desktop uses a paper-like surface, masthead, rules, and a 12-column semantic HTML grid. At narrow widths, the selected page reflows into one readable column rather than shrinking a desktop canvas. Links remain normal progressive-enhancement links; JavaScript, swipe gestures, PDF rendering, images, canvas, and modal interception are not required.
+Desktop uses a paper-like surface, masthead, rules, and a 12-column semantic HTML grid. At narrow widths, the selected page reflows into one readable column rather than shrinking a desktop canvas. Keyboard, fullscreen, sharing, and swipe are progressive enhancements; basic page and Contents links remain usable without JavaScript. PDF rendering, images, canvas, and modal interception are not used.
 
 ## Local development
 
@@ -92,8 +113,13 @@ The deterministic newspaper is the safe foundation and fallback for a future opt
 - human editorial overrides;
 - source or Open Graph images;
 - reader modal and intercepted routes;
+- page zoom and type-size controls;
+- two-page spread mode;
+- page thumbnails;
+- reading-position persistence;
+- richer transition animation;
 - French editions and translation;
 - podcast generation;
 - RSS and email distribution.
 
-Images, modal reading, podcasts, personalization, and model-generated prose are intentionally absent from this version. The routes deliberately retain the current `force-dynamic` strategy; a different cache/revalidation policy is follow-up work. Canonical behavior for numbered interior-page query URLs is also unchanged and should be evaluated separately rather than expanded in this correction.
+Images, modal reading, podcasts, personalization, and model-generated prose are intentionally absent from this version. The routes deliberately retain the current `force-dynamic` strategy; a different cache/revalidation policy is follow-up work. Canonical behavior for numbered interior-page query URLs is also unchanged. Native fullscreen and sharing remain browser-policy features: desktop Chromium supports both in normal secure contexts, while Safari/iOS may use CSS immersive fallback and may restrict Clipboard or native Share according to platform permissions.
