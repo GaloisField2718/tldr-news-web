@@ -68,6 +68,20 @@ describe("Daily production safety", () => {
     ]) expect(await readFile(file, "utf8")).not.toContain("dangerouslySetInnerHTML")
   })
 
+  it("bounds native and fallback immersive shells as vertical 100dvh viewports", async () => {
+    const css = await readFile(path.join(ROOT, "app/globals.css"), "utf8")
+    for (const kind of ["fallback", "native"]) {
+      const block = css.match(new RegExp(`body\\[data-daily-immersive="${kind}"\\] \\.daily-immersive-shell \\{([^}]*)\\}`))?.[1]
+      expect(block).toBeDefined()
+      expect(block).toContain("height: 100dvh")
+      expect(block).toContain("max-height: 100dvh")
+      expect(block).toContain("overflow-x: hidden")
+      expect(block).toContain("overflow-y: auto")
+      expect(block).toContain("overscroll-behavior: contain")
+      expect(block).not.toContain("min-height")
+    }
+  })
+
   it("has no client Daily module importing filesystem or raw corpus data", async () => {
     const files = [...(await filesBelow("app/daily")), path.join(ROOT, "components/daily-toolbar.tsx"), path.join(ROOT, "components/daily-edition-shell.tsx"), path.join(ROOT, "components/newspaper-page.tsx")]
     for (const file of files) {

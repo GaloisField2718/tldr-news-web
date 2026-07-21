@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest"
 import {
   bindDailyKeyboard,
+  focusDailyReadingTarget,
   handleDailyShortcut,
   requestImmersiveMode,
   resolveDailyShortcut,
   resolveDailySwipe,
+  scrollDailyViewport,
   shareDailyPage,
   updateDailyImmersiveBody,
   type DailyShortcutContext,
@@ -38,6 +40,7 @@ function shortcut(overrides: Partial<DailyShortcutContext> = {}): DailyShortcutC
     interactiveTarget: false,
     hasSelection: false,
     contentsOpen: false,
+    immersive: false,
     fallbackImmersive: false,
     currentPage: 2,
     pageCount: 3,
@@ -102,6 +105,25 @@ describe("Daily keyboard shortcuts", () => {
     expect(resolveDailyShortcut(shortcut({ key: "Escape", fallbackImmersive: true, interactiveTarget: true }))).toEqual({ type: "exit-fallback" })
   })
 
+  it.each([
+    ["ArrowDown", false, 1, "increment"],
+    ["ArrowUp", false, -1, "increment"],
+    ["PageDown", false, 1, "viewport"],
+    ["PageUp", false, -1, "viewport"],
+    [" ", false, 1, "viewport"],
+    [" ", true, -1, "viewport"],
+  ] as const)("resolves immersive %s reading movement", (key, shiftKey, direction, amount) => {
+    expect(resolveDailyShortcut(shortcut({ key, shiftKey, immersive: true }))).toEqual({
+      type: "scroll",
+      direction,
+      amount,
+    })
+  })
+
+  it.each(["ArrowDown", "ArrowUp", "PageDown", "PageUp", " "])("leaves %s native outside immersive mode", (key) => {
+    expect(resolveDailyShortcut(shortcut({ key }))).toBeNull()
+  })
+
   it.each(["ctrlKey", "metaKey", "altKey", "shiftKey"] as const)("suppresses shortcuts with %s", (modifier) => {
     expect(resolveDailyShortcut(shortcut({ [modifier]: true }))).toBeNull()
   })
@@ -124,11 +146,34 @@ describe("Daily keyboard shortcuts", () => {
     expect(resolveDailyShortcut(shortcut({ defaultPrevented: true }))).toBeNull()
   })
 
+  it.each([
+    { interactiveTarget: true },
+    { contentsOpen: true },
+    { hasSelection: true },
+    { defaultPrevented: true },
+    { ctrlKey: true },
+    { metaKey: true },
+    { altKey: true },
+  ])("suppresses immersive vertical movement for unsafe context %#", (override) => {
+    expect(resolveDailyShortcut(shortcut({ key: "ArrowDown", immersive: true, ...override }))).toBeNull()
+  })
+
+  it("allows Shift only for Shift+Space", () => {
+    expect(resolveDailyShortcut(shortcut({ key: "ArrowDown", shiftKey: true, immersive: true }))).toBeNull()
+    expect(resolveDailyShortcut(shortcut({ key: "PageUp", shiftKey: true, immersive: true }))).toBeNull()
+    expect(resolveDailyShortcut(shortcut({ key: " ", shiftKey: true, immersive: true }))).toEqual({
+      type: "scroll",
+      direction: -1,
+      amount: "viewport",
+    })
+  })
+
   it("prevents default only for actions that are actually handled", () => {
     const preventDefault = vi.fn()
     const navigate = vi.fn(() => true)
     expect(handleDailyShortcut(shortcut(), {
       navigate,
+      scroll: vi.fn(() => true),
       toggleImmersive: vi.fn(),
       exitFallback: vi.fn(),
       preventDefault,
@@ -137,11 +182,85 @@ describe("Daily keyboard shortcuts", () => {
     preventDefault.mockClear()
     expect(handleDailyShortcut(shortcut({ interactiveTarget: true }), {
       navigate,
+      scroll: vi.fn(() => true),
       toggleImmersive: vi.fn(),
       exitFallback: vi.fn(),
       preventDefault,
     })).toBe(false)
     expect(preventDefault).not.toHaveBeenCalled()
+  })
+
+  it("scrolls the immersive viewport and prevents default only when movement occurs", () => {
+    const preventDefault = vi.fn()
+    const scrollTo = vi.fn()
+    const viewport = { scrollTop: 200, scrollHeight: 2000, clientHeight: 800, scrollTo }
+    const handlers = {
+      navigate: vi.fn(() => true),
+      scroll: (action: Parameters<typeof scrollDailyViewport>[1]) => scrollDailyViewport(viewport, action),
+      toggleImmersive: vi.fn(),
+      exitFallback: vi.fn(),
+      preventDefault,
+    }
+
+    expect(handleDailyShortcut(shortcut({ key: "ArrowDown", immersive: true }), handlers)).toBe(true)
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 360, behavior: "auto" })
+    expect(preventDefault).toHaveBeenCalledOnce()
+
+    viewport.scrollTop = 0
+    preventDefault.mockClear()
+    scrollTo.mockClear()
+    expect(handleDailyShortcut(shortcut({ key: "ArrowUp", immersive: true }), handlers)).toBe(false)
+    expect(scrollTo).not.toHaveBeenCalled()
+    expect(preventDefault).not.toHaveBeenCalled()
+
+    viewport.scrollTop = 1200
+    expect(handleDailyShortcut(shortcut({ key: "PageDown", immersive: true }), handlers)).toBe(false)
+    expect(preventDefault).not.toHaveBeenCalled()
+  })
+
+  it("does not handle any vertical reading key at its scroll boundary", () => {
+    const preventDefault = vi.fn()
+    const scrollTo = vi.fn()
+    const viewport = { scrollTop: 0, scrollHeight: 1800, clientHeight: 800, scrollTo }
+    const handlers = {
+      navigate: vi.fn(() => true),
+      scroll: (action: Parameters<typeof scrollDailyViewport>[1]) => scrollDailyViewport(viewport, action),
+      toggleImmersive: vi.fn(),
+      exitFallback: vi.fn(),
+      preventDefault,
+    }
+    for (const context of [
+      shortcut({ key: "ArrowUp", immersive: true }),
+      shortcut({ key: "PageUp", immersive: true }),
+      shortcut({ key: " ", shiftKey: true, immersive: true }),
+    ]) expect(handleDailyShortcut(context, handlers)).toBe(false)
+
+    viewport.scrollTop = 1000
+    for (const key of ["ArrowDown", "PageDown", " "]) {
+      expect(handleDailyShortcut(shortcut({ key, immersive: true }), handlers)).toBe(false)
+    }
+    expect(scrollTo).not.toHaveBeenCalled()
+    expect(preventDefault).not.toHaveBeenCalled()
+  })
+
+  it("uses viewport-sized increments for Page and Space shortcuts in both directions", () => {
+    const scrollTo = vi.fn()
+    const viewport = { scrollTop: 800, scrollHeight: 3000, clientHeight: 1000, scrollTo }
+    expect(scrollDailyViewport(viewport, { type: "scroll", direction: 1, amount: "viewport" })).toBe(true)
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 1650, behavior: "auto" })
+    viewport.scrollTop = 1650
+    expect(scrollDailyViewport(viewport, { type: "scroll", direction: -1, amount: "viewport" })).toBe(true)
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 800, behavior: "auto" })
+  })
+
+  it("focuses the immersive viewport and restores the fullscreen control without scrolling", () => {
+    const readingFocus = vi.fn()
+    const buttonFocus = vi.fn()
+    expect(focusDailyReadingTarget({ focus: readingFocus })).toBe(true)
+    expect(readingFocus).toHaveBeenCalledWith({ preventScroll: true })
+    expect(focusDailyReadingTarget({ focus: buttonFocus })).toBe(true)
+    expect(buttonFocus).toHaveBeenCalledWith({ preventScroll: true })
+    expect(focusDailyReadingTarget(null)).toBe(false)
   })
 
   it("registers one listener and returns cleanup", () => {

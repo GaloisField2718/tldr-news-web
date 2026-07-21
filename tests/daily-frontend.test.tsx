@@ -114,6 +114,7 @@ describe("Daily rendering", () => {
     expect(html).toContain('aria-label="Next newspaper page"')
     expect(html).toContain("daily-side-arrow-next")
     expect(html).not.toContain("daily-side-arrow-previous")
+    expect(html).toMatch(/daily-immersive-shell[^>]*tabindex="-1"/)
     expect(html).toContain('aria-pressed="false"')
     expect(html).toContain("Keyboard shortcuts")
     expect(html).toContain(">Share</button>")

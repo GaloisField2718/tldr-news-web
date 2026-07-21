@@ -64,6 +64,10 @@ export function DailyToolbar({
             <strong>Keyboard shortcuts</strong>
             <dl>
               <dt>← / →</dt><dd>Previous / next page</dd>
+              <dt>↑ / ↓</dt><dd>Scroll while full screen</dd>
+              <dt>PgUp / PgDn</dt><dd>Scroll by viewport</dd>
+              <dt>Space</dt><dd>Scroll down by viewport</dd>
+              <dt>Shift+Space</dt><dd>Scroll up by viewport</dd>
               <dt>Home</dt><dd>First page</dd>
               <dt>End</dt><dd>Last page</dd>
               <dt>F</dt><dd>Full screen</dd>

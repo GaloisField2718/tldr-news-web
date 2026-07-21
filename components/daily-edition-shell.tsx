@@ -7,9 +7,11 @@ import { usePathname, useRouter } from "next/navigation"
 import { DailyToolbar } from "@/components/daily-toolbar"
 import {
   bindDailyKeyboard,
+  focusDailyReadingTarget,
   handleDailyShortcut,
   requestImmersiveMode,
   resolveDailySwipe,
+  scrollDailyViewport,
   shareDailyPage,
   updateDailyImmersiveBody,
 } from "@/lib/daily-interactions"
@@ -104,6 +106,7 @@ export function DailyEditionShell({
       setFallbackImmersive(true)
       setDocumentImmersive("fallback")
     }
+    focusDailyReadingTarget(shellRef.current)
   }, [exitFallback, setDocumentImmersive])
 
   const navigate = useCallback((href?: string) => {
@@ -121,7 +124,7 @@ export function DailyEditionShell({
     previousPageRef.current = navigation.currentPage
     const frame = requestAnimationFrame(() => {
       setAnnouncement(`Page ${navigation.currentPage} of ${navigation.pageCount}`)
-      if (immersive) shellRef.current?.scrollTo({ top: 0, behavior: "instant" })
+      if (immersive) shellRef.current?.scrollTo({ top: 0, behavior: "auto" })
       else surfaceRef.current?.scrollIntoView({ block: "start" })
     })
     return () => cancelAnimationFrame(frame)
@@ -135,6 +138,7 @@ export function DailyEditionShell({
         setFallbackImmersive(false)
         fallbackRef.current = false
         setDocumentImmersive("native")
+        focusDailyReadingTarget(shellRef.current)
       } else if (!fallbackRef.current) {
         setDocumentImmersive(null)
       }
@@ -145,7 +149,7 @@ export function DailyEditionShell({
 
   useEffect(() => {
     if (wasImmersiveRef.current && !immersive && pathname === `/daily/${navigation.date}`) {
-      fullscreenButtonRef.current?.focus()
+      focusDailyReadingTarget(fullscreenButtonRef.current)
     }
     wasImmersiveRef.current = immersive
   }, [immersive, navigation.date, pathname])
@@ -200,6 +204,7 @@ export function DailyEditionShell({
           interactiveTarget: isInteractiveTarget(event.target),
           hasSelection: hasTextSelection(),
           contentsOpen: Boolean(contentsRef.current?.open),
+          immersive: Boolean(document.body.dataset.dailyImmersive),
           fallbackImmersive: fallbackRef.current,
           currentPage: current.currentPage,
           pageCount: current.pageCount,
@@ -210,6 +215,9 @@ export function DailyEditionShell({
         },
         {
           navigate,
+          scroll: (action) => shellRef.current
+            ? scrollDailyViewport(shellRef.current, action)
+            : false,
           toggleImmersive: () => { void toggleImmersive() },
           exitFallback,
           preventDefault: () => event.preventDefault(),
@@ -287,6 +295,7 @@ export function DailyEditionShell({
       className="daily-immersive-shell"
       data-daily-edition-shell
       data-daily-enhanced={enhanced ? "true" : undefined}
+      tabIndex={-1}
     >
       <DailyToolbar
         navigation={navigation}

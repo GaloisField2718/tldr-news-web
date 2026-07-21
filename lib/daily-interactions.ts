@@ -1,5 +1,12 @@
+export type DailyScrollAction = {
+  type: "scroll"
+  direction: -1 | 1
+  amount: "increment" | "viewport"
+}
+
 export type DailyShortcutAction =
   | { type: "navigate"; href: string }
+  | DailyScrollAction
   | { type: "toggle-immersive" }
   | { type: "exit-fallback" }
 
@@ -13,6 +20,7 @@ export interface DailyShortcutContext {
   interactiveTarget: boolean
   hasSelection: boolean
   contentsOpen: boolean
+  immersive: boolean
   fallbackImmersive: boolean
   currentPage: number
   pageCount: number
@@ -28,7 +36,7 @@ export function resolveDailyShortcut(context: DailyShortcutContext): DailyShortc
     context.ctrlKey ||
     context.metaKey ||
     context.altKey ||
-    context.shiftKey
+    (context.shiftKey && context.key !== " ")
   ) return null
 
   if (context.key === "Escape" && context.fallbackImmersive) {
@@ -38,6 +46,17 @@ export function resolveDailyShortcut(context: DailyShortcutContext): DailyShortc
 
   if (context.key === "f" || context.key === "F") return { type: "toggle-immersive" }
   if (context.contentsOpen) return null
+
+  if (context.immersive) {
+    if (context.key === "ArrowDown") return { type: "scroll", direction: 1, amount: "increment" }
+    if (context.key === "ArrowUp") return { type: "scroll", direction: -1, amount: "increment" }
+    if (context.key === "PageDown" || (context.key === " " && !context.shiftKey)) {
+      return { type: "scroll", direction: 1, amount: "viewport" }
+    }
+    if (context.key === "PageUp" || (context.key === " " && context.shiftKey)) {
+      return { type: "scroll", direction: -1, amount: "viewport" }
+    }
+  }
 
   if (context.key === "ArrowLeft" && context.previousPageHref) {
     return { type: "navigate", href: context.previousPageHref }
@@ -58,6 +77,7 @@ export function handleDailyShortcut(
   context: DailyShortcutContext,
   handlers: {
     navigate: (href: string) => boolean
+    scroll: (action: DailyScrollAction) => boolean
     toggleImmersive: () => void
     exitFallback: () => void
     preventDefault: () => void
@@ -66,9 +86,39 @@ export function handleDailyShortcut(
   const action = resolveDailyShortcut(context)
   if (!action) return false
   if (action.type === "navigate" && !handlers.navigate(action.href)) return false
+  if (action.type === "scroll" && !handlers.scroll(action)) return false
   handlers.preventDefault()
   if (action.type === "toggle-immersive") handlers.toggleImmersive()
   if (action.type === "exit-fallback") handlers.exitFallback()
+  return true
+}
+
+export interface DailyScrollViewport {
+  scrollTop: number
+  scrollHeight: number
+  clientHeight: number
+  scrollTo(options: { top: number; behavior: "auto" }): void
+}
+
+export function scrollDailyViewport(
+  viewport: DailyScrollViewport,
+  action: DailyScrollAction,
+): boolean {
+  const maximum = Math.max(0, viewport.scrollHeight - viewport.clientHeight)
+  const distance = action.amount === "viewport"
+    ? viewport.clientHeight * 0.85
+    : Math.max(80, Math.min(180, viewport.clientHeight * 0.2))
+  const target = Math.max(0, Math.min(maximum, viewport.scrollTop + action.direction * distance))
+  if (Math.abs(target - viewport.scrollTop) < 1) return false
+  viewport.scrollTo({ top: target, behavior: "auto" })
+  return true
+}
+
+export function focusDailyReadingTarget(
+  target?: { focus(options?: FocusOptions): void } | null,
+): boolean {
+  if (!target) return false
+  target.focus({ preventScroll: true })
   return true
 }
 

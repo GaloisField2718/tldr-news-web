@@ -58,15 +58,18 @@ A compact client shell adds convenience without changing composition or data gen
 Keyboard shortcuts are:
 
 - `ArrowLeft` / `ArrowRight`: previous / next page;
+- `ArrowUp` / `ArrowDown`: move through the current page by a modest reading increment while immersive;
+- `PageUp` / `PageDown`: move through the current page by approximately one viewport while immersive;
+- `Shift+Space` / `Space`: move up / down by approximately one viewport while immersive;
 - `Home` / `End`: first / last page;
 - `F`: enter or leave immersive mode;
 - `Escape`: leave CSS fallback immersive mode (and the browser retains its normal native-fullscreen Escape behavior).
 
-Shortcuts are ignored for modified keystrokes, controls and links, editable content, open Contents, active text selections, or already-handled events. Wide desktops also expose 44×44-pixel semantic side-arrow links outside the paper.
+Vertical reading shortcuts scroll the bounded newspaper shell, never the locked document body, and are inactive outside immersive mode. Shortcuts are ignored for Ctrl/Meta/Alt combinations, controls and links, editable content, open Contents, active text selections, or already-handled events. Shift is accepted only for `Shift+Space`; other shifted shortcuts remain suppressed. Wide desktops also expose 44×44-pixel semantic side-arrow links outside the paper.
 
 A one-touch mobile gesture is accepted only after at least 65 pixels of horizontal movement and a horizontal-to-vertical ratio of at least 1.5. Multi-touch, cancelled, short, vertical, ambiguous, selected-text, boundary, and interactive-element gestures do nothing. The implementation never prevents ordinary vertical scrolling.
 
-The user-initiated **Full screen** control first requests the native Fullscreen API. If the API is absent or rejects (including common Safari/iOS limitations), a `100dvh` CSS fallback fixes a scrollable Daily layer above the site and hides site chrome through stable data attributes. Both modes restore body overflow and site chrome on exit or unmount, preserve focus, and remain active across numbered-page query navigation.
+The user-initiated **Full screen** control first requests the native Fullscreen API. If the API is absent or rejects (including common Safari/iOS limitations), a `100dvh` CSS fallback fixes a Daily layer above the site and hides site chrome through stable data attributes. Native and fallback modes both bound the shell to `100dvh`, make it the vertical scroll viewport, contain overscroll, and hide horizontal overflow. Entry focuses that reading viewport without scrolling it; exit restores focus to the fullscreen button without creating a focus trap. Both modes restore body overflow and site chrome on exit or unmount and remain active across numbered-page query navigation.
 
 **Share** uses the native Share API when available and otherwise copies the exact canonical current-page URL. Cancellation, copied-link success, and unavailable APIs receive restrained polite feedback. A first-visit fine-pointer hint advertises shortcuts; persistent native `details` help remains keyboard accessible.
 

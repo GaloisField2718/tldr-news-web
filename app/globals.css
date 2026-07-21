@@ -174,7 +174,7 @@
 }
 .daily-help summary::-webkit-details-marker { display: none; }
 .daily-help > div { width: min(21rem, calc(100vw - 1.5rem)); padding: 1rem; }
-.daily-help dl { display: grid; grid-template-columns: 4rem 1fr; gap: .45rem 1rem; margin-top: .75rem; }
+.daily-help dl { display: grid; grid-template-columns: 5.75rem 1fr; gap: .45rem 1rem; margin-top: .75rem; }
 .daily-help dt { font-family: var(--font-mono); font-weight: 600; }
 .daily-help dd { color: var(--muted-foreground); }
 .daily-edition-nav { border-top: 1px solid var(--border); padding: .45rem .25rem; }
@@ -218,13 +218,18 @@ body[data-daily-immersive="fallback"] .daily-immersive-shell {
   z-index: 100;
   inset: 0;
   height: 100dvh;
-  overflow: auto;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--background);
 }
 body[data-daily-immersive="native"] .daily-immersive-shell {
-  min-height: 100dvh;
-  overflow: auto;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--background);
 }
 
