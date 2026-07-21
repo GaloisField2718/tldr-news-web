@@ -35,9 +35,9 @@ Reader keys are lowercase SHA-256 hex digests of `issue_id + "\0" + article.id`.
 
 Canonical sectors are TLDR, AI, Dev, Web Dev, InfoSec, Cybersecurity, Crypto, Product, Design, Founders, and Marketing. Unknown future sectors follow in stable slug order.
 
-The front-page lead is the first lead-eligible (non-empty trimmed title and summary) non-sponsored editorial article from TLDR, then the first lead-eligible editorial article in canonical order, then—if nothing is eligible—the deterministic first editorial entry, then a non-sponsored resource. Lead eligibility is a stable content-completeness rule, not editorial judgment. Secondary front-page stories initially take at most one from each sector. No sponsor can be a lead or normal front-page story.
+The front-page lead is the first eligible (non-empty trimmed title and summary) non-sponsored editorial article from TLDR, then the first eligible editorial article in canonical order. All nine normal front-page positions prefer that same completeness rule: one lead, four secondary stories, and four briefs. Secondary selection takes at most one story from each sector before normal filling. Incomplete entries continue to interior pages whenever eligible editorial content exists; they are used on the front page only as a deterministic last fallback for a date with no eligible editorial entry. A non-sponsored resource is the fallback when no editorial article exists. Eligibility is a stable content-completeness rule, not editorial judgment. No sponsor can be a lead or normal front-page story.
 
-Assigned front-page articles leave the pool. Remaining editorial articles continue by sector through fixed-capacity `section-lead` and `three-column` pages. Tools, repositories, and courses use `resources` pages. Sponsors use final, explicitly labelled `sponsored` pages. Continuation pages ensure long-tail entries are retained. Text length does not determine page assignment.
+Assigned front-page articles leave the pool. Remaining editorial articles continue by sector through `section-lead` and `three-column` pages with a maximum of 15 entries. Continuation chunks are balanced deterministically (for example, 16 entries become 8 + 8 rather than 15 + 1) while preserving order. Tools, repositories, and courses use `resources` pages. Sponsors use final, explicitly labelled `sponsored` pages. Continuation pages ensure long-tail entries are retained. Text length does not determine page assignment.
 
 Failed empty issues remain in edition source metadata as unavailable. Partial issues contribute their available entries. Every unique article is assigned to exactly one page.
 
@@ -96,4 +96,4 @@ The deterministic newspaper is the safe foundation and fallback for a future opt
 - podcast generation;
 - RSS and email distribution.
 
-Images, modal reading, podcasts, personalization, and model-generated prose are intentionally absent from this version.
+Images, modal reading, podcasts, personalization, and model-generated prose are intentionally absent from this version. The routes deliberately retain the current `force-dynamic` strategy; a different cache/revalidation policy is follow-up work. Canonical behavior for numbered interior-page query URLs is also unchanged and should be evaluated separately rather than expanded in this correction.

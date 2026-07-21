@@ -127,34 +127,52 @@ function toArticle(issue, section, source, key, canonicalUrl, occurrences) {
   }
 }
 
-function leadEligible(article) {
+function frontPageEligible(article) {
   return article.title.trim().length > 0 && article.summary.trim().length > 0
 }
 
 function selectFrontPage(editorial) {
   if (editorial.length === 0) return []
-  const lead =
-    editorial.find((article) => article.sector_slug === "tldr" && leadEligible(article)) ??
-    editorial.find((article) => leadEligible(article)) ??
-    editorial.find((article) => article.sector_slug === "tldr") ??
-    editorial[0]
-  const remaining = editorial.filter((article) => article.article_key !== lead.article_key)
+  const eligible = editorial.filter(frontPageEligible)
+  // Incomplete entries remain in the interior pool whenever any complete
+  // editorial selection exists. They are a deterministic last fallback only
+  // for dates on which no editorial entry has both a title and summary.
+  const candidates = eligible.length > 0 ? eligible : editorial
+  const lead = candidates.find((article) => article.sector_slug === "tldr") ?? candidates[0]
+  const remaining = candidates.filter((article) => article.article_key !== lead.article_key)
   const selected = [lead]
   const sectors = new Set([lead.sector_slug])
+  // Four secondary positions prefer distinct sectors before normal filling.
   for (const article of remaining) {
-    if (selected.length >= 7) break
+    if (selected.length >= 5) break
     if (!sectors.has(article.sector_slug)) {
       selected.push(article)
       sectors.add(article.sector_slug)
     }
   }
   for (const article of remaining) {
-    if (selected.length >= 14) break
+    if (selected.length >= 9) break
     if (!selected.some((selectedArticle) => selectedArticle.article_key === article.article_key)) {
       selected.push(article)
     }
   }
   return selected
+}
+
+export function balancedChunks(items, maxCapacity = 15) {
+  if (!Number.isInteger(maxCapacity) || maxCapacity < 1) throw new Error("Daily page capacity must be a positive integer")
+  if (items.length === 0) return []
+  const pageCount = Math.ceil(items.length / maxCapacity)
+  const baseSize = Math.floor(items.length / pageCount)
+  const largerPages = items.length % pageCount
+  const chunks = []
+  let offset = 0
+  for (let index = 0; index < pageCount; index += 1) {
+    const size = baseSize + (index < largerPages ? 1 : 0)
+    chunks.push(items.slice(offset, offset + size))
+    offset += size
+  }
+  return chunks
 }
 
 function pageSlots(articles, firstRole = "lead") {
@@ -268,7 +286,7 @@ export function composeDailyEdition({ date, documents, resolvedSourceCommit, art
       kicker: "Across today’s newsletters",
       sectors: [...new Set(frontArticles.map((article) => article.sector))],
       slots: frontArticles.map((article, index) => ({
-        role: index === 0 ? "lead" : index < 7 ? "secondary" : "brief",
+        role: index === 0 ? "lead" : index < 5 ? "secondary" : "brief",
         article_key: article.article_key,
       })),
     })
@@ -281,11 +299,7 @@ export function composeDailyEdition({ date, documents, resolvedSourceCommit, art
     bySector.get(article.sector_slug).push(article)
   }
   for (const sectorArticles of bySector.values()) {
-    let offset = 0
-    let continuation = 0
-    while (offset < sectorArticles.length) {
-      const capacity = continuation === 0 ? 12 : 15
-      const chunk = sectorArticles.slice(offset, offset + capacity)
+    for (const [continuation, chunk] of balancedChunks(sectorArticles).entries()) {
       chunk.forEach((article) => assigned.add(article.article_key))
       pages.push({
         number: pages.length + 1,
@@ -293,10 +307,8 @@ export function composeDailyEdition({ date, documents, resolvedSourceCommit, art
         title: continuation === 0 ? chunk[0].sector : `${chunk[0].sector} — continued`,
         kicker: continuation === 0 ? chunk[0].section_heading : "Continued",
         sectors: [chunk[0].sector],
-        slots: pageSlots(chunk),
+        slots: pageSlots(chunk, continuation === 0 ? "lead" : "standard"),
       })
-      offset += capacity
-      continuation += 1
     }
   }
 

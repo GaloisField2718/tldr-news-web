@@ -139,6 +139,33 @@ describe("deterministic Daily composition", () => {
     expect(assigned.filter((key) => key === dailyArticleKey(general.issue_id, "notitle"))).toHaveLength(1)
   })
 
+  it("keeps incomplete entries off normal front-page slots when enough complete stories exist", () => {
+    const incomplete = [
+      makeArticle("no-title", "editorial", { title: " ", url: "https://example.com/no-title" }),
+      makeArticle("no-summary", "editorial", { order: 2, summary: "", url: "https://example.com/no-summary" }),
+    ]
+    const complete = Array.from({ length: 11 }, (_, index) =>
+      makeArticle(`complete-${index}`, "editorial", {
+        order: index + 3,
+        url: `https://example.com/complete-${index}`,
+      }),
+    )
+    const issue = makeIssue({ sector: "TLDR", sectorSlug: "tldr", articles: [...incomplete, ...complete] })
+    const result = edition([issue])
+    const frontKeys = result.pages[0].slots.map((slot) => slot.article_key)
+    expect(result.pages[0].slots.map((slot) => slot.role)).toEqual([
+      "lead",
+      "secondary", "secondary", "secondary", "secondary",
+      "brief", "brief", "brief", "brief",
+    ])
+    expect(frontKeys).toHaveLength(9)
+    expect(frontKeys).not.toContain(dailyArticleKey(issue.issue_id, "no-title"))
+    expect(frontKeys).not.toContain(dailyArticleKey(issue.issue_id, "no-summary"))
+    const interiorKeys = result.pages.slice(1).flatMap((page) => page.slots.map((slot) => slot.article_key))
+    expect(interiorKeys).toContain(dailyArticleKey(issue.issue_id, "no-title"))
+    expect(interiorKeys).toContain(dailyArticleKey(issue.issue_id, "no-summary"))
+  })
+
   it("falls back to the deterministic first editorial entry when nothing is lead-eligible", () => {
     const general = makeIssue({ sector: "TLDR", sectorSlug: "tldr", articles: [
       makeArticle("first", "editorial", { summary: "", url: "https://example.com/first" }),
@@ -158,6 +185,29 @@ describe("deterministic Daily composition", () => {
     expect(result.pages[0].slots[0].article_key).toBe(dailyArticleKey(issue.issue_id, "news"))
     expect(result.pages.find((page) => page.template === "resources")?.slots.every((slot) => slot.role === "resource")).toBe(true)
     expect(result.pages.find((page) => page.template === "sponsored")?.slots.every((slot) => slot.role === "sponsor")).toBe(true)
+  })
+
+  it.each([
+    [14, [14]],
+    [16, [8, 8]],
+    [29, [15, 14]],
+    [31, [11, 10, 10]],
+  ])("balances %i remaining sector stories across continuation pages", (remaining, expectedSizes) => {
+    const total = 9 + remaining
+    const articles = Array.from({ length: total }, (_, index) =>
+      makeArticle(`balanced-${index}`, "editorial", {
+        order: index + 1,
+        url: `https://example.com/balanced/${index}`,
+      }),
+    )
+    const issue = makeIssue({ articles })
+    const result = edition([issue])
+    const interior = result.pages.slice(1)
+    expect(interior.map((page) => page.slots.length)).toEqual(expectedSizes)
+    expect(interior.every((page) => page.slots.length <= 15)).toBe(true)
+    expect(interior.flatMap((page) => page.slots.map((slot) => slot.article_key))).toEqual(
+      articles.slice(9).map((article) => dailyArticleKey(issue.issue_id, article.id)),
+    )
   })
 
   it("creates deterministic continuation pages for a long sector", () => {

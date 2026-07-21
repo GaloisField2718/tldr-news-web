@@ -7,6 +7,7 @@ export function presentationClass(article: {
   is_sponsor: boolean
 }): "sponsor" | "resource" | "editorial"
 export function canonicalizeDailyUrl(value: string | null): string | null
+export function balancedChunks<T>(items: T[], maxCapacity?: number): T[][]
 export function dailyArticleKey(issueId: string, articleId: string): string
 export function composeDailyEdition(options: {
   date: string

@@ -89,9 +89,9 @@ export default async function DailyArticlePage({ params }: PageProps) {
         </div>
       </article>
       <nav aria-label="Articles in this edition" className="daily-reader-pager">
-        <span>{position.previousKey ? <Link href={`/daily/${date}/article/${position.previousKey}`}>← Previous article</Link> : "← Previous article"}</span>
+        {position.previousKey ? <Link href={`/daily/${date}/article/${position.previousKey}`}>← Previous article</Link> : <span aria-disabled="true">← Previous article</span>}
         <Link href={pageHref(date, position.page)}>Newspaper page {position.page}</Link>
-        <span>{position.nextKey ? <Link href={`/daily/${date}/article/${position.nextKey}`}>Next article →</Link> : "Next article →"}</span>
+        {position.nextKey ? <Link href={`/daily/${date}/article/${position.nextKey}`}>Next article →</Link> : <span aria-disabled="true">Next article →</span>}
       </nav>
     </div>
   )

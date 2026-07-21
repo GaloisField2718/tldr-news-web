@@ -96,6 +96,12 @@ describe("Daily rendering", () => {
     expect(html).not.toContain('href="https://publisher.example/lead"')
     expect(html).not.toContain("Extra story 14")
     expect(html).toContain("Contents")
+    expect(html).toContain("daily-story-span-8")
+    expect(html).toContain("daily-story-span-4")
+    expect(html).toContain("daily-story-span-3")
+    expect(html).toMatch(/daily-page-count[^>]*>1 of/)
+    expect(html).not.toMatch(/daily-page-count[^>]*aria-current/)
+    expect(html).toContain('aria-disabled="true"')
   })
 
   it("omits page=1 from canonical newspaper links", async () => {

@@ -114,7 +114,7 @@
   gap: 1rem;
 }
 
-.daily-toolbar-row { padding: .65rem .25rem; }
+.daily-toolbar-row { flex-wrap: wrap; padding: .65rem .25rem; }
 .daily-toolbar-actions { border-top: 1px solid var(--border); }
 .daily-toolbar a,
 .daily-contents summary { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -123,9 +123,9 @@
 .daily-toolbar-link { font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
 .daily-page-count { font-family: var(--font-mono); font-weight: 500; }
 .daily-toolbar-date { color: var(--muted-foreground); }
-.daily-inline-nav { flex: 1; }
-.daily-inline-nav > span,
-.daily-edition-nav > span:not(:has(a)) { color: var(--faint-foreground); }
+.daily-inline-nav { flex: 1; flex-wrap: wrap; }
+.daily-toolbar [aria-disabled="true"],
+.daily-reader-shell [aria-disabled="true"] { color: var(--faint-foreground); cursor: default; text-decoration: none; }
 .daily-contents { position: relative; }
 .daily-contents > ol {
   position: absolute;
@@ -143,7 +143,7 @@
 .daily-contents li a { display: flex; flex-direction: column; gap: .2rem; padding: .7rem; text-decoration: none; }
 .daily-contents li a[aria-current="page"] { border-left: 3px solid var(--accent); background: var(--accent-soft); }
 .daily-contents small { color: var(--muted-foreground); }
-.daily-edition-nav { border-top: 1px solid var(--border); padding: .65rem .25rem; }
+.daily-edition-nav { flex-wrap: wrap; border-top: 1px solid var(--border); padding: .65rem .25rem; }
 
 .newspaper-sheet {
   max-width: 82rem;
@@ -161,14 +161,13 @@
 .newspaper-page-heading { border-bottom: 2px solid var(--foreground); padding: 1.25rem 0 .6rem; }
 .newspaper-page-heading p { font: 600 .65rem/1.2 var(--font-sans); color: var(--accent); text-transform: uppercase; letter-spacing: .15em; }
 .newspaper-page-heading h2 { margin-top: .2rem; font: 650 clamp(1.8rem, 4vw, 3.2rem)/1 var(--font-serif); }
-.newspaper-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: start; }
-.daily-story { grid-column: span 4; min-width: 0; padding: 1.1rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border-strong); }
-.daily-story:nth-child(3n) { border-right: 0; }
-.daily-story-lead { grid-column: span 8; padding-left: 0; }
-.daily-story-secondary { grid-column: span 4; }
-.daily-story-brief { grid-column: span 3; }
-.daily-story-resource,
-.daily-story-sponsor { grid-column: span 4; }
+.newspaper-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: stretch; border-top: 1px solid var(--border-strong); border-left: 1px solid var(--border); }
+.daily-story { min-width: 0; padding: 1.1rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border-strong); }
+.daily-story-span-3 { grid-column: span 3; }
+.daily-story-span-4 { grid-column: span 4; }
+.daily-story-span-6 { grid-column: span 6; }
+.daily-story-span-8 { grid-column: span 8; }
+.daily-story-span-12 { grid-column: span 12; }
 .daily-story-sponsor { border-top: 3px solid var(--accent); background: var(--accent-soft); }
 .daily-story-label { margin-bottom: .4rem; font: 600 .62rem/1.3 var(--font-sans); color: var(--accent); text-transform: uppercase; letter-spacing: .12em; }
 .daily-story h3 { font: 650 1.35rem/1.08 var(--font-serif); text-wrap: balance; overflow-wrap: anywhere; }
@@ -184,7 +183,7 @@
 
 .daily-reader-shell { max-width: 66rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
 .daily-reader-toolbar,
-.daily-reader-pager { display: flex; justify-content: space-between; gap: 1rem; border-block: 1px solid var(--border-strong); padding: .8rem 0; font: 500 .75rem var(--font-sans); }
+.daily-reader-pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; border-block: 1px solid var(--border-strong); padding: .8rem 0; font: 500 .75rem var(--font-sans); }
 .daily-reader-toolbar a,
 .daily-reader-pager a { text-decoration: underline; text-underline-offset: 3px; }
 .daily-reader { max-width: 46rem; margin: 0 auto; padding: clamp(2.5rem, 8vw, 6rem) 0; }
@@ -205,7 +204,7 @@
 
 @media (max-width: 700px) {
   .daily-viewer { padding: 0 0 1rem; }
-  .daily-toolbar { position: sticky; top: 0; z-index: 15; margin: 0; padding-inline: .75rem; }
+  .daily-toolbar { position: static; margin: 0; padding-inline: .75rem; }
   .daily-toolbar-actions { align-items: flex-start; }
   .daily-inline-nav { font-size: .7rem; }
   .daily-toolbar-date { display: none; }
@@ -213,7 +212,7 @@
   .newspaper-sheet { border-inline: 0; padding: 1rem; box-shadow: none; }
   .newspaper-masthead h1 { font-size: clamp(2.25rem, 13vw, 3.4rem); }
   .newspaper-deck { flex-direction: column; align-items: center; gap: .25rem; text-align: center; font-size: .6rem; }
-  .newspaper-grid { display: block; }
+  .newspaper-grid { display: block; border-left: 0; }
   .daily-story,
   .daily-story-lead,
   .daily-story-secondary,
@@ -223,7 +222,9 @@
   .daily-story-lead h3 { font-size: 2.25rem; }
   .daily-story-secondary h3 { font-size: 1.7rem; }
   .daily-story h3 { font-size: 1.45rem; }
-  .daily-story-brief .daily-story-summary { -webkit-line-clamp: 3; }
+  .daily-story-brief { padding-block: .85rem; }
+  .daily-story-brief .daily-story-summary,
+  .daily-story-brief .daily-story-empty { display: none; }
   .daily-story-sponsor { padding-inline: .75rem; }
   .daily-reader-shell { padding-inline: 1rem; }
   .daily-reader-pager { font-size: .68rem; }

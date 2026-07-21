@@ -7,12 +7,38 @@ const CONTENT_LABELS: Record<string, string> = {
   tool: "Tool",
 }
 
-function DailyStory({ article, role }: { article: DailyArticle; role: string }) {
+function balancedGridSpan(index: number, total: number, start: number): number {
+  const position = index - start
+  const count = total - start
+  const remainder = count % 3
+  if (remainder === 1 && position === count - 1) return 12
+  if (remainder === 2 && position >= count - 2) return 6
+  return 4
+}
+
+function storySpan(page: DailyPage, index: number): number {
+  const total = page.slots.length
+  if (page.template === "front-page") {
+    if (index === 0) return total === 1 ? 12 : 8
+    if (index === 1) return 4
+    if (index < 5) return 12 / Math.min(3, total - 2)
+    return 12 / Math.min(4, total - 5)
+  }
+  if (page.template === "section-lead") {
+    if (total === 1) return 12
+    if (index === 0) return 8
+    if (index === 1) return 4
+    return balancedGridSpan(index, total, 2)
+  }
+  return balancedGridSpan(index, total, 0)
+}
+
+function DailyStory({ article, role, span }: { article: DailyArticle; role: string; span: number }) {
   const href = `/daily/${article.date}/article/${article.article_key}`
   const title = article.title.trim() || "Untitled entry"
   const summary = article.summary.trim()
   return (
-    <article className={`daily-story daily-story-${role}`}>
+    <article className={`daily-story daily-story-${role} daily-story-span-${span}`}>
       <p className="daily-story-label">
         {article.is_sponsor ? "Sponsored · " : ""}{article.sector}
         {CONTENT_LABELS[article.content_type] ? ` · ${CONTENT_LABELS[article.content_type]}` : ""}
@@ -52,9 +78,9 @@ export function NewspaperPage({
         <h2 id="newspaper-page-title">{page.title ?? "Daily Edition"}</h2>
       </div>
       <div className="newspaper-grid">
-        {page.slots.map((slot) => {
+        {page.slots.map((slot, index) => {
           const article = byKey.get(slot.article_key)
-          return article ? <DailyStory key={slot.article_key} article={article} role={slot.role} /> : null
+          return article ? <DailyStory key={slot.article_key} article={article} role={slot.role} span={storySpan(page, index)} /> : null
         })}
       </div>
       <footer className="newspaper-page-footer">

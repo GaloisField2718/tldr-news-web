@@ -43,6 +43,12 @@ describe("Daily production safety", () => {
     for (const file of files) expect(await readFile(file, "utf8")).not.toMatch(/fixtures|tests\/helpers/)
   })
 
+  it("uses explicit grid spans instead of mixed-layout child-number rules", async () => {
+    const css = await readFile(path.join(ROOT, "app/globals.css"), "utf8")
+    expect(css).not.toContain(".daily-story:nth-child")
+    for (const span of [3, 4, 6, 8, 12]) expect(css).toContain(`.daily-story-span-${span}`)
+  })
+
   it("has no client Daily module importing filesystem or raw corpus data", async () => {
     const files = [...(await filesBelow("app/daily")), path.join(ROOT, "components/daily-toolbar.tsx"), path.join(ROOT, "components/newspaper-page.tsx")]
     for (const file of files) {
