@@ -15,7 +15,7 @@
 3. Check out only `generated/` at that exact SHA.
 4. Strictly validate the manifest and every issue document.
 5. Store the source files under `.cache/tldr-data/<sha>/generated/`.
-6. Generate `.generated/archive-metadata.json`, `archive-catalogue.json`, deterministic gzip search segments under `.generated/search/`, and one compressed Daily edition per date under `.generated/daily/`.
+6. Generate `.generated/archive-metadata.json`, `archive-catalogue.json`, deterministic gzip search segments under `.generated/search/`, and one compressed Daily edition per date under `.generated/daily/`; copy the optional validated-at-runtime `generated/editorial/` tree into `.generated/editorial/` from that same checkout.
 
 No issue file is subsequently read from a moving branch URL. Synchronization uses public, read-only Git access and requires no token. Temporary `.sync-*` directories are removed before and after synchronization. Both `.cache/` and `.generated/` are gitignored.
 
@@ -59,7 +59,7 @@ Measurements at the source commit above:
 
 ## Daily newspaper architecture
 
-Daily generation groups validated issues by date, applies conservative exact-URL deduplication scoped by presentation class (sponsored, resource, editorial), assigns stable SHA-256 reader keys, and composes fixed-capacity newspaper pages. `.generated/daily-metadata.json` and `.generated/daily/YYYY-MM-DD.json.gz` share the archive/search source SHA. The metadata records counts, sizes, page counts, and compressed-file checksums. Daily route functions read only these compact server-side artifacts, not every raw issue file. See [`DAILY_NEWSPAPER.md`](./DAILY_NEWSPAPER.md) for composition and reader contracts.
+Daily generation groups validated issues by date, applies conservative exact-URL deduplication scoped by presentation class (sponsored, resource, editorial), assigns stable SHA-256 reader keys, and composes fixed-capacity newspaper pages. `.generated/daily-metadata.json` and `.generated/daily/YYYY-MM-DD.json.gz` share the archive/search source SHA. The metadata records counts, sizes, page counts, and compressed-file checksums. Optional editorial JSON is copied, never generated, by the frontend build; runtime validation either atomically overlays its compact plan or returns the untouched deterministic edition. Image binaries remain in R2 and are requested directly from the exact configured Worker hostname. Daily route functions read only these server-side artifacts, not every raw issue file. See [`DAILY_NEWSPAPER.md`](./DAILY_NEWSPAPER.md) for composition and reader contracts.
 
 The V1 newspaper is deterministic and does not express human or AI editorial judgment. Prominence follows stable fallback rules rather than assessed importance. Original articles remain on publisher websites; TLDR Index displays stored TLDR newsletter summaries and explicit outward links.
 

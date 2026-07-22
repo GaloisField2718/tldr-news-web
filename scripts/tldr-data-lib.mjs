@@ -376,6 +376,16 @@ export async function generateFrontendArtifacts({
   await cp(path.join(path.resolve(generatedDir), "issues"), path.join(temporary, "issues"), {
     recursive: true,
   })
+  const sourceEditorial = path.join(path.resolve(generatedDir), "editorial")
+  const outputEditorial = path.join(temporary, "editorial")
+  await rm(outputEditorial, { recursive: true, force: true })
+  try {
+    const editorialStat = await stat(sourceEditorial)
+    if (!editorialStat.isDirectory()) fail("generated/editorial must be a directory")
+    await cp(sourceEditorial, outputEditorial, { recursive: true })
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error
+  }
 
   const segments = []
   for (const year of [...searchByYear.keys()].sort((a, b) => b.localeCompare(a))) {

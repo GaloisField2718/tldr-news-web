@@ -82,6 +82,16 @@ describe("Daily production safety", () => {
     }
   })
 
+  it("keeps editorial artifacts server-only and traces them without provider calls", async () => {
+    const editorial = await readFile(path.join(ROOT, "lib/daily-editorial.ts"), "utf8")
+    expect(editorial).not.toMatch(/^['\"]use client['\"]/m)
+    expect(editorial).not.toMatch(/fetch\s*\(|openrouter|final_prompt|request_id|usage:/i)
+    const shell = await readFile(path.join(ROOT, "components/daily-edition-shell.tsx"), "utf8")
+    expect(shell).not.toMatch(/daily-editorial|EditorialArtifact/)
+    const config = await readFile(path.join(ROOT, "next.config.mjs"), "utf8")
+    expect(config).toContain("./.generated/editorial/**/*.json")
+  })
+
   it("has no client Daily module importing filesystem or raw corpus data", async () => {
     const files = [...(await filesBelow("app/daily")), path.join(ROOT, "components/daily-toolbar.tsx"), path.join(ROOT, "components/daily-edition-shell.tsx"), path.join(ROOT, "components/newspaper-page.tsx")]
     for (const file of files) {

@@ -1,4 +1,6 @@
+/* eslint-disable @next/next/no-img-element -- Editorial assets must load directly from the immutable Worker URL. */
 import Link from "next/link"
+import type { DailyEditorialIllustration } from "@/lib/daily-editorial"
 import type { DailyArticle, DailyPage } from "@/lib/daily-types"
 
 const CONTENT_LABELS: Record<string, string> = {
@@ -57,10 +59,12 @@ export function NewspaperPage({
   page,
   articles,
   formattedDate,
+  illustration,
 }: {
   page: DailyPage
   articles: DailyArticle[]
   formattedDate: string
+  illustration?: DailyEditorialIllustration
 }) {
   const byKey = new Map(articles.map((article) => [article.article_key, article]))
   return (
@@ -77,6 +81,22 @@ export function NewspaperPage({
         {page.kicker && <p>{page.kicker}</p>}
         <h2 id="newspaper-page-title">{page.title ?? "Daily Edition"}</h2>
       </div>
+      {page.number === 1 && illustration && (
+        <figure className="daily-editorial-illustration">
+          <div className="daily-editorial-image-frame">
+            <img
+              src={illustration.src}
+              width={illustration.width}
+              height={illustration.height}
+              alt={illustration.alt}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+          </div>
+          <figcaption>{illustration.attribution}</figcaption>
+        </figure>
+      )}
       <div className="newspaper-grid">
         {page.slots.map((slot, index) => {
           const article = byKey.get(slot.article_key)

@@ -5,6 +5,7 @@ import { NewspaperPage } from "@/components/newspaper-page"
 import { createDailyEditionNavigation } from "@/lib/daily-navigation"
 import {
   getDailyEdition,
+  getDailyEditorialIllustration,
   getLatestDailyDate,
   getNextDailyDate,
   getPreviousDailyDate,
@@ -74,6 +75,7 @@ export default async function DailyEditionPage({ params, searchParams }: PagePro
   const selected = edition.pages[requestedPage - 1]
   const selectedKeys = new Set(selected.slots.map((slot) => slot.article_key))
   const articles = edition.articles.filter((article) => selectedKeys.has(article.article_key))
+  const illustration = requestedPage === 1 ? getDailyEditorialIllustration(date) : undefined
   const navigation = createDailyEditionNavigation({
     date,
     formattedDate: formatToolbarDate(date),
@@ -87,7 +89,12 @@ export default async function DailyEditionPage({ params, searchParams }: PagePro
   return (
     <div className="daily-viewer">
       <DailyEditionShell navigation={navigation}>
-        <NewspaperPage page={selected} articles={articles} formattedDate={formatDate(date)} />
+        <NewspaperPage
+          page={selected}
+          articles={articles}
+          formattedDate={formatDate(date)}
+          illustration={illustration}
+        />
       </DailyEditionShell>
     </div>
   )

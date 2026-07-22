@@ -3,6 +3,11 @@ import { readFileSync } from "node:fs"
 import path from "node:path"
 import { gunzipSync } from "node:zlib"
 import { getArchiveCatalogue, getGeneratedDataRoot, readGeneratedJson } from "./archive"
+import {
+  applyDailyEditorial,
+  type DailyEditorialIllustration,
+  type DailyEditorialResult,
+} from "./daily-editorial"
 import type {
   DailyArticlePosition,
   DailyEdition,
@@ -12,7 +17,7 @@ import type {
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const ARTICLE_KEY_PATTERN = /^[a-f0-9]{32,64}$/
-const editionCache = new Map<string, DailyEdition>()
+const editionCache = new Map<string, DailyEditorialResult>()
 let metadataCache: { root: string; value: DailyMetadata } | undefined
 
 export function isValidDailyDate(value: string): boolean {
@@ -145,7 +150,7 @@ export function getDailyEdition(date: string): DailyEdition | undefined {
   const root = getGeneratedDataRoot()
   const cacheKey = `${root}:${date}`
   const cached = editionCache.get(cacheKey)
-  if (cached) return cached
+  if (cached) return cached.edition
   const dailyRoot = path.resolve(root, "daily")
   const file = path.resolve(dailyRoot, entry.file)
   if (!file.startsWith(`${dailyRoot}${path.sep}`)) throw new Error("Daily edition path escapes its generated root")
@@ -167,10 +172,17 @@ export function getDailyEdition(date: string): DailyEdition | undefined {
   } catch (error) {
     throw new Error(`Daily edition cannot be decompressed: ${entry.file}`, { cause: error })
   }
-  const edition = assertEdition(parsed, entry)
-  editionCache.set(cacheKey, edition)
+  const deterministic = assertEdition(parsed, entry)
+  const result = applyDailyEditorial(root, deterministic)
+  editionCache.set(cacheKey, result)
   if (editionCache.size > 8) editionCache.delete(editionCache.keys().next().value!)
-  return edition
+  return result.edition
+}
+
+export function getDailyEditorialIllustration(date: string): DailyEditorialIllustration | undefined {
+  const edition = getDailyEdition(date)
+  if (!edition) return undefined
+  return editionCache.get(`${getGeneratedDataRoot()}:${date}`)?.illustration
 }
 
 export function findDailyArticle(date: string, articleKey: string) {
