@@ -386,6 +386,16 @@ export async function generateFrontendArtifacts({
   } catch (error) {
     if (error.code !== "ENOENT") throw error
   }
+  const sourcePodcast = path.join(path.resolve(generatedDir), "podcast")
+  const outputPodcast = path.join(temporary, "podcast")
+  await rm(outputPodcast, { recursive: true, force: true })
+  try {
+    const podcastStat = await stat(sourcePodcast)
+    if (!podcastStat.isDirectory()) fail("generated/podcast must be a directory")
+    await cp(sourcePodcast, outputPodcast, { recursive: true })
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error
+  }
 
   const segments = []
   for (const year of [...searchByYear.keys()].sort((a, b) => b.localeCompare(a))) {

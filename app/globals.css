@@ -90,6 +90,17 @@
 }
 
 /* Daily Index newspaper viewer */
+.podcast-player { max-width: 72rem; margin: 1rem auto; padding: 1rem 1.25rem; border: 1px solid var(--border); background: var(--background); }
+.podcast-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+.podcast-kicker { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; color: var(--muted-foreground); }
+.podcast-player h2 { margin-top: .4rem; font-family: var(--font-serif); font-size: 1.5rem; }
+.podcast-player > p { margin: .45rem 0 .8rem; color: var(--muted-foreground); }
+.podcast-player audio { width: 100%; display: block; }
+.podcast-language { display: flex; border: 1px solid var(--border-strong); }
+.podcast-language button { padding: .35rem .65rem; font-size: .8rem; }
+.podcast-language button[aria-pressed="true"] { background: var(--foreground); color: var(--background); }
+@media (max-width: 520px) { .podcast-heading { align-items: flex-start; flex-direction: column; } .podcast-language { width: 100%; } .podcast-language button { flex: 1; } }
+
 .daily-viewer {
   margin: 0 auto;
   max-width: 92rem;
