@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, unlink, writeFile } from "node:fs/promises"
+import { mkdtemp, mkdir, readFile, rm, unlink, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
@@ -99,6 +99,29 @@ describe("source synchronization validation", () => {
     await writeDataset(generated, [makeIssue()])
     await writeFile(path.join(generated, "GoDaddy-output.json"), "{}")
     await expect(validateGeneratedDataset(generated)).rejects.toThrow("GoDaddy")
+  })
+
+  it("copies editorial artifacts and removes stale output when the source directory disappears", async () => {
+    await writeDataset(generated, [makeIssue()])
+    const sourceEditorial = path.join(generated, "editorial")
+    const output = path.join(temporary, "artifacts")
+    await mkdir(path.join(sourceEditorial, "2026"), { recursive: true })
+    await writeFile(path.join(sourceEditorial, "manifest.json"), "{}")
+    await writeFile(path.join(sourceEditorial, "2026", "2026-07-19.json"), "{}")
+    const options = {
+      generatedDir: generated,
+      outputDir: output,
+      sourceRepository: "owner/source",
+      requestedRef: "main",
+      resolvedSourceCommit: "a".repeat(40),
+      sourceMode: "local" as const,
+    }
+    await generateFrontendArtifacts(options)
+    expect(await readFile(path.join(output, "editorial", "manifest.json"), "utf8")).toBe("{}")
+    await rm(sourceEditorial, { recursive: true })
+    await generateFrontendArtifacts(options)
+    await expect(readFile(path.join(output, "editorial", "manifest.json"), "utf8"))
+      .rejects.toMatchObject({ code: "ENOENT" })
   })
 
   it("records immutable source SHA metadata", async () => {

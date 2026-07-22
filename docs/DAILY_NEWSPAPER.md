@@ -4,7 +4,7 @@
 
 The Daily Index combines every available TLDR thematic newsletter for one date into one continuous, paginated digital newspaper. It is a deterministic reading surface alongside—not a replacement for—the archive, search, and individual issue pages.
 
-This first version does **not** express human or AI editorial judgment. Visual prominence follows stable composition rules and must not be interpreted as assessed importance.
+Visual prominence uses a validated editorial plan when one is available for the edition. The complete deterministic composition remains the authoritative fallback whenever that artifact is absent, disabled, stale, malformed, or cannot be applied atomically.
 
 ## Generated data flow
 
@@ -13,9 +13,11 @@ This first version does **not** express human or AI editorial judgment. Visual p
 ```text
 .generated/daily-metadata.json
 .generated/daily/YYYY-MM-DD.json.gz
+.generated/editorial/manifest.json
+.generated/editorial/YYYY/YYYY-MM-DD.json
 ```
 
-One compressed edition is generated per date. `daily-metadata.json` records counts, compressed and uncompressed sizes, SHA-256 checksums, and the source commit. `npm run data:check` decompresses and validates every edition, checks checksums and source-SHA consistency, and proves that page assignments exactly equal unique article keys.
+The editorial directory is copied from the same immutable source checkout and is removed from the frontend output when absent upstream, so stale artifacts cannot survive a successful sync. One compressed edition is generated per date. `daily-metadata.json` records counts, compressed and uncompressed sizes, SHA-256 checksums, and the source commit. `npm run data:check` decompresses and validates every edition, checks checksums and source-SHA consistency, and proves that page assignments exactly equal unique article keys.
 
 `tldr_news` remains the sole source of truth for ingestion and normalized newsletter data. Daily artifacts contain only fields needed for newspaper composition and the reader; source paths, source hashes, parse warnings, and raw issue documents are excluded.
 
@@ -40,6 +42,16 @@ The front-page lead is the first eligible (non-empty trimmed title and summary) 
 Assigned front-page articles leave the pool. Remaining editorial articles continue by sector through `section-lead` and `three-column` pages with a maximum of 15 entries. Continuation chunks are balanced deterministically (for example, 16 entries become 8 + 8 rather than 15 + 1) while preserving order. Tools, repositories, and courses use `resources` pages. Sponsors use final, explicitly labelled `sponsored` pages. Continuation pages ensure long-tail entries are retained. Text length does not determine page assignment.
 
 Failed empty issues remain in edition source metadata as unavailable. Partial issues contribute their available entries. Every unique article is assigned to exactly one page.
+
+## Editorial overlay and illustration
+
+For `ai_complete` and `editorial_only` artifacts, the server verifies the manifest path, byte count, SHA-256, date, status, input-hash linkage, plan shape, lead, roles, section slugs, and every `(issue_id, article_id)` against normalized Daily occurrences. It then projects only the lead, front-page roles, section order, image delivery fields, and alt text. Prompt text, provider request IDs, model usage, cost details, and the complete artifact never enter client props or browser payloads.
+
+Editorial front-page selections replace the deterministic page-one selections. Every selected unique article is removed from the remainder, remaining editorial sections follow `plan.section_order`, and resources and sponsors retain their dedicated pages. The composed edition must assign every deterministic article exactly once. Any read, validation, reference, or composition failure returns the original deterministic edition object without a partial overlay.
+
+An illustration renders on page 1 only for an `ai_complete` artifact whose image is `ready`, storage-verified, WebP, declared 3:2, and within two percent of that ratio. Its immutable `daily/YYYY/MM/DD/<sha256>.webp` key must match the artifact date and image SHA; its HTTPS URL must use the configured Cloudflare Worker hostname and exactly the object-key pathname. The browser requests that URL directly—Next.js and Vercel do not proxy or copy the binary. The responsive 3:2 figure uses explicit dimensions, eager/high-priority loading, async decoding, the supplied visual-brief alt text, and fixed “AI-generated editorial illustration” attribution.
+
+`TLDR_EDITORIAL_IMAGE_HOST` may configure the exact allowed Worker hostname; it defaults to the production Worker host.
 
 ## Routes and reader
 

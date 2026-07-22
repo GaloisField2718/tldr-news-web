@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import DailyEditionPage from "@/app/daily/[date]/page"
 import DailyArticlePage from "@/app/daily/[date]/article/[articleKey]/page"
 import HomePage from "@/app/page"
+import { NewspaperPage } from "@/components/newspaper-page"
 import { SiteHeader } from "@/components/site-header"
 import {
   findDailyArticle,
@@ -118,6 +119,40 @@ describe("Daily rendering", () => {
     expect(html).toContain('aria-pressed="false"')
     expect(html).toContain("Keyboard shortcuts")
     expect(html).toContain(">Share</button>")
+  })
+
+  it("renders a ready editorial image directly on page one only", () => {
+    const article = findDailyArticle(latestDate, dailyArticleKey(`tldr:${latestDate}`, "lead"))!
+    const page = {
+      number: 1,
+      template: "front-page" as const,
+      title: "Today’s Index",
+      kicker: "Across today’s newsletters",
+      sectors: [article.sector],
+      slots: [{ role: "lead" as const, article_key: article.article_key }],
+    }
+    const illustration = {
+      src: `https://tldr-assets.noisy-dew-7159.workers.dev/daily/2026/09/02/${"a".repeat(64)}.webp`,
+      width: 1264,
+      height: 848,
+      alt: "Rack-scale AI system",
+      attribution: "AI-generated editorial illustration" as const,
+    }
+    const html = renderToStaticMarkup(
+      <NewspaperPage page={page} articles={[article]} formattedDate="Wednesday, September 2, 2026" illustration={illustration} />,
+    )
+    expect(html).toContain(`src="${illustration.src}"`)
+    expect(html).toContain('width="1264"')
+    expect(html).toContain('height="848"')
+    expect(html).toContain('loading="eager"')
+    expect(html).toContain('fetchPriority="high"')
+    expect(html).toContain('decoding="async"')
+    expect(html).toContain('alt="Rack-scale AI system"')
+    expect(html).toContain("AI-generated editorial illustration")
+    const interior = renderToStaticMarkup(
+      <NewspaperPage page={{ ...page, number: 2 }} articles={[article]} formattedDate="Wednesday, September 2, 2026" illustration={illustration} />,
+    )
+    expect(interior).not.toContain("daily-editorial-illustration")
   })
 
   it("omits unavailable side navigation at the final page", async () => {
