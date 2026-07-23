@@ -9,6 +9,7 @@ const nextConfig = {
       "./.generated/daily-metadata.json",
       "./.generated/daily/*.json.gz",
       "./.generated/editorial/**/*.json",
+      "./.generated/podcast/**/*.json",
     ],
   },
 }

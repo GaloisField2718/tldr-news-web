@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe,expect,it } from "vitest"
 import { PodcastPlayer,preferredPodcastLanguage } from "@/components/podcast-player"
@@ -8,4 +9,5 @@ describe("bilingual podcast player",()=>{
  it("renders native English audio without autoplay and preserves both selectors",()=>{const html=renderToStaticMarkup(<PodcastPlayer podcast={podcast}/>);expect(html).toContain("English episode");expect(html).toContain("<audio");expect(html).toContain("controls");expect(html).not.toContain("autoplay");expect(html).toContain("Français")})
  it("chooses stored preference before browser language",()=>expect(preferredPodcastLanguage("en","fr-FR")).toBe("en"))
  it("uses French browser language and English fallback",()=>{expect(preferredPodcastLanguage(null,"fr-CA")).toBe("fr");expect(preferredPodcastLanguage(null,"de-DE")).toBe("en")})
+ it("traces synchronized podcast artifacts into production output",()=>expect(readFileSync("next.config.mjs","utf8")).toContain("./.generated/podcast/**/*.json"))
 })
