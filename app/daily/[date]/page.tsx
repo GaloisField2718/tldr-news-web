@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { DailyEditionShell } from "@/components/daily-edition-shell"
 import { NewspaperPage } from "@/components/newspaper-page"
+import { PodcastPlayer } from "@/components/podcast-player"
 import { createDailyEditionNavigation } from "@/lib/daily-navigation"
 import {
   getDailyEdition,
@@ -12,6 +13,7 @@ import {
   isValidDailyDate,
   normalizeDailyPage,
 } from "@/lib/daily"
+import { getDailyPodcast } from "@/lib/podcast"
 
 export const dynamic = "force-dynamic"
 
@@ -76,6 +78,7 @@ export default async function DailyEditionPage({ params, searchParams }: PagePro
   const selectedKeys = new Set(selected.slots.map((slot) => slot.article_key))
   const articles = edition.articles.filter((article) => selectedKeys.has(article.article_key))
   const illustration = requestedPage === 1 ? getDailyEditorialIllustration(date) : undefined
+  const podcast = requestedPage === 1 ? getDailyPodcast(date) : undefined
   const navigation = createDailyEditionNavigation({
     date,
     formattedDate: formatToolbarDate(date),
@@ -89,6 +92,7 @@ export default async function DailyEditionPage({ params, searchParams }: PagePro
   return (
     <div className="daily-viewer">
       <DailyEditionShell navigation={navigation}>
+        {podcast && <PodcastPlayer podcast={podcast} />}
         <NewspaperPage
           page={selected}
           articles={articles}
