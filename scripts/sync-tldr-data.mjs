@@ -15,7 +15,7 @@ const projectRoot = path.resolve(import.meta.dirname, "..")
 const cacheRoot = path.join(projectRoot, ".cache", "tldr-data")
 const outputDir = path.join(projectRoot, ".generated")
 const sourceRepository = process.env.TLDR_DATA_REPO || "GaloisField2718/tldr_news"
-const requestedRef = process.env.TLDR_DATA_REF || "main"
+const requestedRef = process.env.TLDR_DATA_REF || (process.env.VERCEL_GIT_COMMIT_REF === "feat/bilingual-podcast" ? "feat/daily-podcast-mvp" : "main")
 const localPath = process.env.TLDR_DATA_LOCAL_PATH
 
 function normalizeRepository(value) {
