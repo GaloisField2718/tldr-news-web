@@ -22,6 +22,7 @@
 # misc
 .DS_Store
 *.pem
+docs/PRODUCT_FINALIZATION.md
 
 # debug
 npm-debug.log*
