@@ -8,7 +8,7 @@ export function preferredPodcastLanguage(stored:string|null,browserLanguage:stri
 }
 export function PodcastPlayer({podcast}:{podcast:DailyPodcast}) {
  const [language,setLanguage]=useState<PodcastLanguage>("en")
- useEffect(()=>setLanguage(preferredPodcastLanguage(localStorage.getItem(KEY),navigator.language)),[])
+ useEffect(()=>{const id=setTimeout(()=>setLanguage(preferredPodcastLanguage(localStorage.getItem(KEY),navigator.language)));return ()=>clearTimeout(id)},[])
  function select(value:PodcastLanguage){setLanguage(value);localStorage.setItem(KEY,value)}
  const episode=podcast.languages[language]
  return <section className="podcast-player" aria-labelledby="podcast-title">
