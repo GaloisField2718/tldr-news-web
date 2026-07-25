@@ -37,6 +37,15 @@ describe("ExternalArticleLink shared component", () => {
     expect(html).toBe('<a href="https://example.com/story" target="_blank" rel="noopener noreferrer">Read more</a>')
   })
 
+  it("omits target and rel entirely when newTab is false", () => {
+    const html = renderToStaticMarkup(
+      <ExternalArticleLink url="https://example.com/story" newTab={false}>
+        Read more
+      </ExternalArticleLink>,
+    )
+    expect(html).toBe('<a href="https://example.com/story">Read more</a>')
+  })
+
   it("preserves className, and the visible label stays the accessible name", () => {
     const html = renderToStaticMarkup(
       <ExternalArticleLink url="https://example.com/story" className="story-link">

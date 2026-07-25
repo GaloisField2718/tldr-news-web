@@ -104,6 +104,9 @@ describe("Daily rendering", () => {
     expect(html).toContain("1 of")
     expect(html).toContain(`/daily/${latestDate}/article/${key}`)
     expect(html).not.toContain('href="https://publisher.example/lead"')
+    // Title and summary open the reader page in a new tab so the journal page
+    // (and any active podcast playback) is preserved in the original tab.
+    expect(html).toContain(`target="_blank" rel="noopener noreferrer" href="/daily/${latestDate}/article/${key}"`)
     expect(html).not.toContain("Extra story 14")
     expect(html).toContain("Contents")
     expect(html).toContain("daily-story-span-8")
@@ -173,9 +176,12 @@ describe("Daily rendering", () => {
     const html = renderToStaticMarkup(await DailyArticlePage({ params: Promise.resolve({ date: latestDate, articleKey: key }) }))
     expect(html).toContain("Complete lead summary.")
     expect(html).toContain("Summary from the TLDR newsletter")
-    expect(html).toContain('href="https://publisher.example/lead"')
-    expect(html).toContain('target="_blank"')
-    expect(html).toContain('rel="noopener noreferrer"')
+    // Reached by opening the journal's title/summary link (already its own
+    // new tab), so the source link stays in this same tab instead of
+    // spawning yet another one.
+    expect(html).toContain('href="https://publisher.example/lead">Read the original article')
+    expect(html).not.toContain('target="_blank"')
+    expect(html).not.toContain('rel="noopener noreferrer"')
     expect(html).toContain("Also appeared in")
     expect(html).toContain("Back to page 1")
   })

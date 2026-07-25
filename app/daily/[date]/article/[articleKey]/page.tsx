@@ -78,7 +78,7 @@ export default async function DailyArticlePage({ params }: PageProps) {
           </aside>
         )}
         <div className="daily-reader-actions">
-          <ExternalArticleLink url={article.url} fallback={<span>Original link unavailable</span>}>
+          <ExternalArticleLink url={article.url} newTab={false} fallback={<span>Original link unavailable</span>}>
             Read the original article ↗
           </ExternalArticleLink>
           <Link href={article.issue_route}>View the archived {article.sector} issue</Link>

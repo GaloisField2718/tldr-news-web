@@ -45,8 +45,8 @@ function DailyStory({ article, role, span }: { article: DailyArticle; role: stri
         {article.is_sponsor ? "Sponsored · " : ""}{article.sector}
         {CONTENT_LABELS[article.content_type] ? ` · ${CONTENT_LABELS[article.content_type]}` : ""}
       </p>
-      <h3><Link href={href}>{title}</Link></h3>
-      {summary ? <p className="daily-story-summary"><Link href={href}>{summary}</Link></p> : <p className="daily-story-empty">Summary unavailable</p>}
+      <h3><Link href={href} target="_blank" rel="noopener noreferrer">{title}</Link></h3>
+      {summary ? <p className="daily-story-summary"><Link href={href} target="_blank" rel="noopener noreferrer">{summary}</Link></p> : <p className="daily-story-empty">Summary unavailable</p>}
       <p className="daily-story-meta">
         {article.source_domain ?? "Source unavailable"}
         {article.reading_time_minutes !== null ? ` · ${article.reading_time_minutes} min` : ""}
