@@ -175,6 +175,7 @@ describe("Daily rendering", () => {
     expect(html).toContain("Summary from the TLDR newsletter")
     expect(html).toContain('href="https://publisher.example/lead"')
     expect(html).toContain('target="_blank"')
+    expect(html).toContain('rel="noopener noreferrer"')
     expect(html).toContain("Also appeared in")
     expect(html).toContain("Back to page 1")
   })

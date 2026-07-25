@@ -176,4 +176,25 @@ describe("article metadata", () => {
     expect(html).toContain("no link")
     expect(html).not.toContain("min read")
   })
+
+  it("opens a valid external article URL in a new tab with safe rel attributes", () => {
+    const html = renderToStaticMarkup(<ArticleEntry article={article("editorial")} />)
+    expect(html).toContain('href="https://example.com/item"')
+    expect(html).toContain('target="_blank"')
+    expect(html).toContain('rel="noopener noreferrer"')
+  })
+
+  it("renders safely instead of a clickable link when the URL is malformed", () => {
+    const item = { ...article("editorial"), url: "not a url" }
+    const html = renderToStaticMarkup(<ArticleEntry article={item} />)
+    expect(html).not.toContain("<a ")
+    expect(html).toContain("no link")
+  })
+
+  it("rejects a non-http(s) scheme instead of rendering it as a clickable link", () => {
+    const item = { ...article("editorial"), url: "javascript:alert(1)" }
+    const html = renderToStaticMarkup(<ArticleEntry article={item} />)
+    expect(html).not.toContain("<a ")
+    expect(html).toContain("no link")
+  })
 })

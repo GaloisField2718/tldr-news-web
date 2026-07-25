@@ -1,6 +1,7 @@
 import type { Article } from "@/lib/types"
 import { ArticleMetadata } from "@/components/article-metadata"
 import { ArrowUpRightIcon } from "@/components/icons"
+import { ExternalArticleLink } from "@/components/external-article-link"
 
 interface ArticleEntryProps {
   article: Article
@@ -39,23 +40,20 @@ export function ArticleEntry({ article }: ArticleEntryProps) {
       )}
 
       <h3 className="font-serif text-lg leading-snug text-pretty md:text-xl">
-        {article.url ? (
-          <a
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group text-foreground underline-offset-4 hover:text-accent hover:underline"
-          >
-            {titleContent}
-          </a>
-        ) : (
-          <span className="group text-foreground">
-            {titleContent}
-            <span className="ml-2 align-middle font-mono text-[10px] uppercase tracking-wider text-faint-foreground">
-              no link
+        <ExternalArticleLink
+          url={article.url}
+          className="group text-foreground underline-offset-4 hover:text-accent hover:underline"
+          fallback={
+            <span className="group text-foreground">
+              {titleContent}
+              <span className="ml-2 align-middle font-mono text-[10px] uppercase tracking-wider text-faint-foreground">
+                no link
+              </span>
             </span>
-          </span>
-        )}
+          }
+        >
+          {titleContent}
+        </ExternalArticleLink>
       </h3>
 
       <p className="mt-1.5 max-w-2xl font-sans text-[15px] leading-relaxed text-muted-foreground text-pretty">

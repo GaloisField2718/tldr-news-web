@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { ExternalArticleLink } from "@/components/external-article-link"
 import { getDailyArticlePosition, isValidDailyDate } from "@/lib/daily"
 import { dailyPageHref } from "@/lib/daily-navigation"
 
@@ -77,11 +78,9 @@ export default async function DailyArticlePage({ params }: PageProps) {
           </aside>
         )}
         <div className="daily-reader-actions">
-          {article.url ? (
-            <a href={article.url} target="_blank" rel="noopener noreferrer">Read the original article ↗</a>
-          ) : (
-            <span>Original link unavailable</span>
-          )}
+          <ExternalArticleLink url={article.url} fallback={<span>Original link unavailable</span>}>
+            Read the original article ↗
+          </ExternalArticleLink>
           <Link href={article.issue_route}>View the archived {article.sector} issue</Link>
         </div>
       </article>

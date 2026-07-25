@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { SearchResultItem } from "@/lib/search"
 import { ArticleMetadata } from "@/components/article-metadata"
 import { ArrowUpRightIcon } from "@/components/icons"
+import { ExternalArticleLink } from "@/components/external-article-link"
 import { formatMonoDate } from "@/lib/format"
 
 interface SearchResultProps {
@@ -58,22 +59,17 @@ export function SearchResult({ item, query }: SearchResultProps) {
       )}
 
       <h3 className="font-serif text-lg leading-snug text-pretty">
-        {article.url ? (
-          <a
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group text-foreground underline-offset-4 hover:text-accent hover:underline"
-          >
-            {highlight(article.title, query)}
-            <ArrowUpRightIcon
-              className="ml-1 inline h-3.5 w-3.5 -translate-y-px text-faint-foreground group-hover:text-accent"
-              aria-hidden="true"
-            />
-          </a>
-        ) : (
-          <span className="text-foreground">{highlight(article.title, query)}</span>
-        )}
+        <ExternalArticleLink
+          url={article.url}
+          className="group text-foreground underline-offset-4 hover:text-accent hover:underline"
+          fallback={<span className="text-foreground">{highlight(article.title, query)}</span>}
+        >
+          {highlight(article.title, query)}
+          <ArrowUpRightIcon
+            className="ml-1 inline h-3.5 w-3.5 -translate-y-px text-faint-foreground group-hover:text-accent"
+            aria-hidden="true"
+          />
+        </ExternalArticleLink>
       </h3>
 
       <p className="mt-1.5 max-w-2xl font-sans text-sm leading-relaxed text-muted-foreground text-pretty">
