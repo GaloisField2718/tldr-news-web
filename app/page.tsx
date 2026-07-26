@@ -1,43 +1,98 @@
+/* eslint-disable @next/next/no-img-element -- Editorial assets must load directly from the immutable Worker URL. */
 import Link from "next/link"
 import { SearchField } from "@/components/search-field"
 import { SectorNav } from "@/components/sector-nav"
 import { IssueList } from "@/components/issue-list"
+import { DailyPodcastListenActions } from "@/components/podcast-provider"
 import { getLatestIssues, getSectors, getYears, getArchiveCatalogue } from "@/lib/archive"
-import { getLatestDailyDate } from "@/lib/daily"
+import { getLatestPublishedDaily, getPublishedDailyPodcast } from "@/lib/daily-latest"
+import { formatLongDate } from "@/lib/format"
 
 export default function HomePage() {
   const latest = getLatestIssues(6)
   const sectors = getSectors()
   const years = getYears()
   const manifest = getArchiveCatalogue()
-  const latestDailyDate = getLatestDailyDate()
+  const edition = getLatestPublishedDaily()
+  const podcast = edition ? getPublishedDailyPodcast(edition.date) : undefined
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-10 md:px-8 md:py-14">
-      {/* Masthead — restrained, editorial, no marketing hero */}
-      <section className="border-b border-border-strong pb-8">
-        <p className="font-mono text-xs uppercase tracking-widest text-faint-foreground">
-          The TLDR Newsletter Archive
-        </p>
-        <h1 className="mt-3 max-w-3xl font-serif text-3xl leading-[1.08] text-foreground text-balance md:text-[2.6rem]">
-          A searchable index of every TLDR issue
-        </h1>
-        <p className="mt-3 max-w-2xl font-sans text-[15px] leading-relaxed text-muted-foreground text-pretty">
-          {manifest.total_issues.toLocaleString()} indexed issues across{" "}
-          {sectors.length} sectors, normalized into sections and articles for
-          close reading and research.
-        </p>
-
-        <div className="mt-3 max-w-2xl">
-          <SearchField size="lg" />
-        </div>
-        {latestDailyDate && (
-          <p className="mt-5 border-t border-border pt-4 font-serif text-lg">
-            <Link href={`/daily/${latestDailyDate}`} className="underline decoration-border-strong underline-offset-4 hover:text-accent hover:decoration-accent">
-              Read today’s Daily Index →
-            </Link>
-          </p>
+      {/* The latest edition leads the page; the archive remains one click away below. */}
+      <section className="border-b border-border-strong pb-8" aria-labelledby="latest-edition-heading">
+        {edition ? (
+          <>
+            <p className="font-mono text-xs uppercase tracking-widest text-faint-foreground">
+              Latest Daily Edition ·{" "}
+              <time dateTime={edition.date}>{formatLongDate(edition.date)}</time>
+            </p>
+            {edition.illustration && (
+              <figure className="mt-4">
+                <img
+                  src={edition.illustration.src}
+                  width={edition.illustration.width}
+                  height={edition.illustration.height}
+                  alt={edition.illustration.alt}
+                  className="h-auto w-full border border-border"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                />
+                <figcaption className="mt-1.5 font-mono text-[11px] uppercase tracking-widest text-faint-foreground">
+                  {edition.illustration.attribution}
+                </figcaption>
+              </figure>
+            )}
+            <h1
+              id="latest-edition-heading"
+              className="mt-4 max-w-3xl font-serif text-3xl leading-[1.08] text-foreground text-balance md:text-[2.6rem]"
+            >
+              {edition.title}
+            </h1>
+            <p className="mt-3 max-w-2xl font-sans text-[15px] leading-relaxed text-muted-foreground text-pretty">
+              {edition.introduction}
+            </p>
+            <p className="mt-4 font-serif text-lg">
+              <Link
+                href={`/daily/${edition.date}`}
+                className="underline decoration-border-strong underline-offset-4 hover:text-accent hover:decoration-accent"
+              >
+                Read the edition →
+              </Link>
+              <span className="ml-3 font-sans text-xs text-faint-foreground">
+                {edition.articleCount} stories from {edition.issueCount} newsletters
+              </span>
+            </p>
+            {podcast && <DailyPodcastListenActions date={edition.date} podcast={podcast} className="podcast-listen" />}
+          </>
+        ) : (
+          <>
+            <p className="font-mono text-xs uppercase tracking-widest text-faint-foreground">
+              The TLDR Newsletter Archive
+            </p>
+            <h1
+              id="latest-edition-heading"
+              className="mt-3 max-w-3xl font-serif text-3xl leading-[1.08] text-foreground text-balance md:text-[2.6rem]"
+            >
+              A searchable index of every TLDR issue
+            </h1>
+            <p className="mt-3 max-w-2xl font-sans text-[15px] leading-relaxed text-muted-foreground text-pretty">
+              {manifest.total_issues.toLocaleString()} indexed issues across {sectors.length} sectors, normalized into
+              sections and articles for close reading and research. No Daily edition is available yet.
+            </p>
+          </>
         )}
+
+        <div className="mt-6 max-w-2xl border-t border-border pt-5">
+          <SearchField size="lg" />
+          <p className="mt-2 font-sans text-xs text-muted-foreground">
+            Search all editions, or{" "}
+            <Link href="/archive" className="underline underline-offset-4 hover:text-accent">
+              browse the archive
+            </Link>
+            .
+          </p>
+        </div>
       </section>
 
       <div className="grid grid-cols-1 gap-x-12 gap-y-12 pt-10 lg:grid-cols-[1fr_15rem]">

@@ -198,7 +198,10 @@ describe("Daily rendering", () => {
   it("navigation and homepage expose Daily without redesigning Browse", () => {
     expect(renderToStaticMarkup(<SiteHeader />)).toContain('href="/daily"')
     const home = renderToStaticMarkup(<HomePage />)
-    expect(home).toContain("Read today’s Daily Index")
+    // The homepage now leads with the edition itself rather than a link to "today";
+    // Browse must survive that change untouched.
+    expect(home).toContain("Latest Daily Edition")
+    expect(home).toContain(`href="/daily/${latestDate}"`)
     expect(home).toContain("Latest issues")
   })
 

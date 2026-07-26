@@ -21,6 +21,8 @@ import {
 interface PodcastRegistration {
   register(date: string, podcast: DailyPodcast): void
   release(): void
+  /** Adopt an episode and begin playing it in the requested language, from a user gesture. */
+  start(date: string, podcast: DailyPodcast, language: PodcastLanguage): void
 }
 
 const PodcastContext = createContext<PodcastRegistration | null>(null)
@@ -126,7 +128,31 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const release = useCallback(() => setPrimary(false), [])
-  const registration = useMemo<PodcastRegistration>(() => ({ register, release }), [register, release])
+
+  const start = useCallback(
+    (date: string, podcast: DailyPodcast, next: PodcastLanguage) => {
+      const audio = audioRef.current
+      const url = podcast.languages[next].audio_url
+      register(date, podcast)
+      if (next !== language) writePodcastPreference(PODCAST_LANGUAGE_KEY, next)
+      // Already loaded: play straight away. Otherwise the source effect will assign the
+      // episode and pick playback up from the resume flag, which is the same path a
+      // language switch uses.
+      if (audio && audio.getAttribute("src") === url) {
+        void audio.play()?.catch(() => {
+          /* the browser refused playback; the dock's own controls remain available */
+        })
+        return
+      }
+      resumeRef.current = true
+    },
+    [language, register],
+  )
+
+  const registration = useMemo<PodcastRegistration>(
+    () => ({ register, release, start }),
+    [register, release, start],
+  )
 
   const selectLanguage = useCallback(
     (next: PodcastLanguage) => {
@@ -238,6 +264,34 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
         </div>
       </section>
     </PodcastContext.Provider>
+  )
+}
+
+/**
+ * Listen actions for an edition's podcast, for surfaces that present an episode without
+ * owning it — the homepage in particular. Nothing is registered until the reader asks:
+ * the dock stays absent, and no audio loads, until one of these buttons is pressed.
+ */
+export function DailyPodcastListenActions({
+  date,
+  podcast,
+  className,
+}: {
+  date: string
+  podcast: DailyPodcast
+  className?: string
+}) {
+  const registration = useContext(PodcastContext)
+  if (!registration) return null
+  return (
+    <div className={className} role="group" aria-label="Listen to the Daily podcast">
+      <button type="button" onClick={() => registration.start(date, podcast, "en")}>
+        Listen in English
+      </button>
+      <button type="button" onClick={() => registration.start(date, podcast, "fr")}>
+        Écouter en français
+      </button>
+    </div>
   )
 }
 
