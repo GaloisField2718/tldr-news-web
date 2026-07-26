@@ -2,8 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import type { ReactNode } from "react"
+import { formatMonoDate } from "@/lib/format"
 import type { DailyPodcast, PodcastLanguage } from "@/lib/podcast"
 import {
+  formatPodcastDuration,
   PODCAST_LANGUAGE_KEY,
   PODCAST_MINIMIZED_KEY,
   PODCAST_VOLUME_KEY,
@@ -46,7 +48,6 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
 
   const [session, setSession] = useState<Session | null>(null)
   const [primary, setPrimary] = useState(false)
-  const [playing, setPlaying] = useState(false)
 
   // Persisted preferences, read as an external store rather than assigned from an effect.
   const hydrated = useSyncExternalStore(subscribePodcastPreferences, alwaysTrue, alwaysFalse)
@@ -63,6 +64,14 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
 
   const episode = session ? session.podcast.languages[language] : null
   const src = episode?.audio_url ?? null
+  // Naming the edition matters: playback follows the reader, so the dock can outlive the
+  // page it came from -- notably on an edition that has no podcast of its own.
+  const label =
+    session && episode
+      ? ["Daily podcast", formatMonoDate(session.date), formatPodcastDuration(episode.duration_seconds)]
+          .filter(Boolean)
+          .join(" · ")
+      : "Daily podcast"
 
   // The only place the media source changes. It assigns to the existing element rather
   // than re-rendering a keyed <audio>, so the DOM node itself is never replaced.
@@ -91,32 +100,28 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    const onPlay = () => {
-      setPlaying(true)
+    const onPlay = () =>
       setSession((previous) => (previous && !previous.started ? { ...previous, started: true } : previous))
-    }
-    const onPause = () => setPlaying(false)
     // Volume is written without notifying subscribers: nothing renders from it, and a
     // notification per volume tick would rerender the whole subtree.
     const onVolumeChange = () => writePodcastPreference(PODCAST_VOLUME_KEY, String(audio.volume), false)
     audio.addEventListener("play", onPlay)
-    audio.addEventListener("pause", onPause)
-    audio.addEventListener("ended", onPause)
     audio.addEventListener("volumechange", onVolumeChange)
     return () => {
       audio.removeEventListener("play", onPlay)
-      audio.removeEventListener("pause", onPause)
-      audio.removeEventListener("ended", onPause)
       audio.removeEventListener("volumechange", onVolumeChange)
     }
   }, [])
 
   const register = useCallback((date: string, podcast: DailyPodcast) => {
-    // Returning the previous session unchanged when the date matches is what keeps
-    // playback alive across journal pagination: no state change, no source change.
-    setSession((previous) =>
-      previous && previous.date === date ? previous : { date, podcast, started: false, closed: false },
-    )
+    setSession((previous) => {
+      // Returning the previous session unchanged when the date matches is what keeps
+      // playback alive across journal pagination: no state change, no source change.
+      // Coming back to the edition does clear a dismissal, which is the only way a
+      // closed dock ever returns.
+      if (previous && previous.date === date) return previous.closed ? { ...previous, closed: false } : previous
+      return { date, podcast, started: false, closed: false }
+    })
     setPrimary(true)
   }, [])
 
@@ -183,7 +188,7 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
             <>
               <div className="podcast-heading">
                 <div>
-                  <p className="podcast-kicker">Daily podcast</p>
+                  <p className="podcast-kicker">{label}</p>
                   <h2 className="podcast-title">{episode.title}</h2>
                 </div>
                 <div role="group" aria-label="Podcast language" className="podcast-language">
@@ -199,6 +204,7 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
             </>
           ) : null}
           <div className="podcast-controls">
+            {shell === "compact" && episode ? <p className="podcast-compact-label">{label}</p> : null}
             {/*
               The single persistent media element. It is never keyed, never conditionally
               rendered, and never moved between containers: minimize, restore, close, route
@@ -215,19 +221,20 @@ export function PodcastProvider({ children }: { children: ReactNode }) {
             </audio>
             <div className="podcast-actions">
               <button type="button" onClick={toggleMinimized} aria-expanded={shell === "expanded"}>
-                {shell === "expanded" ? "Minimize" : "Restore"}
+                {shell === "expanded" ? "Minimize" : "Expand"}
               </button>
-              <button type="button" onClick={close} aria-label="Close podcast player">
-                Close
-              </button>
+              {/*
+                Close only exists once the dock has followed the reader away from the
+                edition that owns it. On that edition there is no other way back to the
+                podcast, so offering to dismiss it there would be a dead end.
+              */}
+              {primary ? null : (
+                <button type="button" onClick={close} aria-label="Close podcast player">
+                  Close
+                </button>
+              )}
             </div>
           </div>
-          {shell === "compact" && episode ? (
-            <p className="podcast-compact-title">
-              {episode.title}
-              {playing ? " · playing" : null}
-            </p>
-          ) : null}
         </div>
       </section>
     </PodcastContext.Provider>

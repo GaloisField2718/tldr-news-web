@@ -73,10 +73,31 @@ const layoutOf = (container: HTMLElement) => container.querySelector(".podcast-l
 const button = (container: HTMLElement, label: string) =>
   Array.from(container.querySelectorAll("button")).find((element) => element.textContent?.trim() === label) as HTMLButtonElement
 
+// Leaving the owning journal: the registrar unmounts and releases, so the dock is no
+// longer on the route that owns the episode.
+const elsewhere = (
+  <PodcastProvider>
+    <p>elsewhere</p>
+  </PodcastProvider>
+)
+const expand = (container: HTMLElement) => fireEvent.click(button(container, "Expand"))
+
 describe("persistent podcast player", () => {
   it("mounts exactly one audio element", () => {
     const { container } = render(journal(headline, "page 1"))
     expect(container.querySelectorAll("audio")).toHaveLength(1)
+  })
+
+  it("opens compact so the edition is not buried under an unrequested player", () => {
+    const { container } = render(journal(headline, "page 1"))
+    expect(dockOf(container).dataset.state).toBe("compact")
+  })
+
+  it("names the edition and the episode length so a followed dock is never misread", () => {
+    const { container } = render(journal(headline, "page 1"))
+    expect(container.querySelector(".podcast-compact-label")?.textContent).toBe("Daily podcast · 2026.07.24 · 2 min")
+    expand(container)
+    expect(container.querySelector(".podcast-kicker")?.textContent).toBe("Daily podcast · 2026.07.24 · 2 min")
   })
 
   it("does not autoplay on initial load", () => {
@@ -108,18 +129,18 @@ describe("persistent podcast player", () => {
     expect(container.textContent).toContain("page 2")
   })
 
-  it("does not recreate the audio element when minimizing and restoring", () => {
+  it("does not recreate the audio element when expanding and minimizing", () => {
     const { container } = render(journal(headline, "page 1"))
     const audio = audioOf(container)
     audio.play()
     audio.currentTime = 17
-    fireEvent.click(button(container, "Minimize"))
-    expect(dockOf(container).dataset.state).toBe("compact")
+    expand(container)
+    expect(dockOf(container).dataset.state).toBe("expanded")
     expect(audioOf(container)).toBe(audio)
     expect(audio.paused).toBe(false)
     expect(audio.currentTime).toBe(17)
-    fireEvent.click(button(container, "Restore"))
-    expect(dockOf(container).dataset.state).toBe("expanded")
+    fireEvent.click(button(container, "Minimize"))
+    expect(dockOf(container).dataset.state).toBe("compact")
     expect(audioOf(container)).toBe(audio)
     expect(audio.paused).toBe(false)
     expect(audio.currentTime).toBe(17)
@@ -130,6 +151,7 @@ describe("persistent podcast player", () => {
     const audio = audioOf(container)
     expect(audio.getAttribute("src")).toContain("/en/")
     audio.currentTime = 55
+    expand(container)
     fireEvent.click(button(container, "Français"))
     expect(audioOf(container)).toBe(audio)
     expect(audio.getAttribute("src")).toContain("/fr/")
@@ -141,33 +163,46 @@ describe("persistent podcast player", () => {
     const { container } = render(journal(headline, "page 1"))
     const audio = audioOf(container)
     audio.play()
+    expand(container)
     fireEvent.click(button(container, "Français"))
     expect(audio.paused).toBe(false)
     expect(audio.currentTime).toBe(0)
   })
 
-  it("persists volume and minimized state, and restores them on a later mount", () => {
+  it("persists volume and the expand choice, and restores them on a later mount", () => {
     const first = render(journal(headline, "page 1"))
     audioOf(first.container).volume = 0.25
-    fireEvent.click(button(first.container, "Minimize"))
+    expand(first.container)
     expect(window.localStorage.getItem(PODCAST_VOLUME_KEY)).toBe("0.25")
-    expect(window.localStorage.getItem(PODCAST_MINIMIZED_KEY)).toBe("true")
+    expect(window.localStorage.getItem(PODCAST_MINIMIZED_KEY)).toBe("false")
     cleanup()
     const second = render(journal(headline, "page 1"))
     expect(audioOf(second.container).volume).toBe(0.25)
-    expect(dockOf(second.container).dataset.state).toBe("compact")
+    expect(dockOf(second.container).dataset.state).toBe("expanded")
     // A reload must never resume playback on its own.
     expect(audioOf(second.container).paused).toBe(true)
   })
 
-  it("closes to a hidden dock while keeping the audio element mounted", () => {
+  it("offers no close control on the edition that owns the episode", () => {
     const { container } = render(journal(headline, "page 1"))
+    expect(button(container, "Close")).toBeUndefined()
+    expand(container)
+    expect(button(container, "Close")).toBeUndefined()
+  })
+
+  it("closes only once it has followed the reader away, and comes back with the edition", () => {
+    const { container, rerender } = render(journal(headline, "page 1"))
     const audio = audioOf(container)
     audio.play()
+    rerender(elsewhere)
+    expect(dockOf(container).dataset.state).toBe("compact")
     fireEvent.click(button(container, "Close"))
     expect(dockOf(container).dataset.state).toBe("hidden")
     expect(audio.paused).toBe(true)
-    expect(container.querySelectorAll("audio")).toHaveLength(1)
+    expect(audioOf(container)).toBe(audio)
+    // Returning to the edition is the way back: a dismissal is never permanent.
+    rerender(journal(headline, "page 1"))
+    expect(dockOf(container).dataset.state).toBe("compact")
     expect(audioOf(container)).toBe(audio)
   })
 
@@ -185,16 +220,22 @@ describe("persistent podcast player", () => {
     for (const podcast of [historical, headline]) {
       const { container, unmount } = render(journal(podcast, "page 1"))
       expect(audioOf(container).getAttribute("src")).toBe(podcast.languages.en.audio_url)
-      expect(dockOf(container).dataset.state).toBe("expanded")
+      expect(dockOf(container).dataset.state).toBe("compact")
       unmount()
     }
   })
+  it("labels a historical five-minute episode with its own length", () => {
+    const { container } = render(journal(historical, "page 1"))
+    expect(container.querySelector(".podcast-compact-label")?.textContent).toBe("Daily podcast · 2026.07.21 · 5 min")
+  })
 
   it("reserves layout space through the dock state so content is never covered", () => {
-    const { container } = render(journal(headline, "page 1"))
-    expect(layoutOf(container).dataset.podcast).toBe("expanded")
-    fireEvent.click(button(container, "Minimize"))
+    const { container, rerender } = render(journal(headline, "page 1"))
     expect(layoutOf(container).dataset.podcast).toBe("compact")
+    expand(container)
+    expect(layoutOf(container).dataset.podcast).toBe("expanded")
+    audioOf(container).play()
+    rerender(elsewhere)
     fireEvent.click(button(container, "Close"))
     expect(layoutOf(container).dataset.podcast).toBe("hidden")
   })
@@ -204,8 +245,9 @@ describe("persistent podcast player", () => {
     expect(audioOf(container).hasAttribute("controls")).toBe(true)
     expect(audioOf(container).getAttribute("aria-label")).toContain("English episode")
     expect(dockOf(container).getAttribute("aria-label")).toBe("Daily podcast player")
+    expect(button(container, "Expand").getAttribute("aria-expanded")).toBe("false")
+    expand(container)
     expect(button(container, "Minimize").getAttribute("aria-expanded")).toBe("true")
-    expect(button(container, "Close").getAttribute("aria-label")).toBe("Close podcast player")
     expect(button(container, "English").getAttribute("aria-pressed")).toBe("true")
     expect(button(container, "Français").getAttribute("aria-pressed")).toBe("false")
   })

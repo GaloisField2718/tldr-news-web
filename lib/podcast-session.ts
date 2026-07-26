@@ -79,9 +79,14 @@ export interface PodcastShellInput {
 export function podcastShellState({ hasEpisode, closed, primary, started, minimized }: PodcastShellInput): PodcastShellState {
   if (!hasEpisode || closed) return "hidden"
   if (!primary && !started) return "hidden"
-  // An explicit minimize/restore choice wins everywhere. Absent one, the dock is
-  // expanded on the journal that owns the episode and compact once the reader has
-  // navigated away from it.
-  const compact = minimized === null ? !primary : minimized
-  return compact ? "compact" : "expanded"
+  // Compact until the reader asks for more. An edition should open on its own
+  // headline, not on a podcast bar nobody requested yet; expanding is one click and
+  // an explicit choice is then remembered.
+  return minimized === false ? "expanded" : "compact"
+}
+
+/** Episode length for the dock label: "2 min". Never rounds down to zero. */
+export function formatPodcastDuration(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return ""
+  return `${Math.max(1, Math.round(seconds / 60))} min`
 }
