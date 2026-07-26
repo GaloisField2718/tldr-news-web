@@ -283,15 +283,27 @@ export function DailyPodcastListenActions({
 }) {
   const registration = useContext(PodcastContext)
   if (!registration) return null
+  const duration = formatPodcastDuration(podcast.languages.en.duration_seconds)
   return (
-    <div className={className} role="group" aria-label="Listen to the Daily podcast">
-      <button type="button" onClick={() => registration.start(date, podcast, "en")}>
-        Listen in English
-      </button>
-      <button type="button" onClick={() => registration.start(date, podcast, "fr")}>
-        Écouter en français
-      </button>
-    </div>
+    <section className={className} aria-labelledby="podcast-listen-label">
+      <p className="podcast-listen-label" id="podcast-listen-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 10v4h3l5 4V6L6 10H3z" />
+          <path d="M16.5 8.5a5 5 0 0 1 0 7" />
+        </svg>
+        Daily podcast{duration ? ` · ${duration}` : ""}
+      </p>
+      {/* The visible labels are the language endonyms; the accessible names spell out
+          the action so the buttons stand on their own out of context. */}
+      <div className="podcast-listen-actions" role="group" aria-label="Choose a podcast language">
+        <button type="button" aria-label="Listen in English" onClick={() => registration.start(date, podcast, "en")}>
+          English
+        </button>
+        <button type="button" aria-label="Écouter en français" onClick={() => registration.start(date, podcast, "fr")}>
+          Français
+        </button>
+      </div>
+    </section>
   )
 }
 

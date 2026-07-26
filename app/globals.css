@@ -90,11 +90,19 @@
 }
 
 /* Daily Index newspaper viewer */
-/* Listen actions on surfaces that present an episode without owning it. */
-.podcast-listen { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
-.podcast-listen button { min-height: 44px; padding: .35rem .8rem; font-size: .8rem; border: 1px solid var(--border-strong); background: var(--background); }
-.podcast-listen button:hover { background: var(--foreground); color: var(--background); }
-.podcast-listen button:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+/* On a phone the lede is bounded so the read and listen actions stay reachable without
+   scrolling, even when the day's headline runs long. Desktop shows it in full. */
+@media (max-width: 767px) { .home-lede { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; } }
+
+/* Listen actions on surfaces that present an episode without owning it. Reads as a
+   labelled media block rather than two loose buttons. */
+.podcast-listen { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.podcast-listen-label { display: flex; align-items: center; gap: .4rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .08em; font-size: .7rem; color: var(--muted-foreground); }
+.podcast-listen-label svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+.podcast-listen-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
+.podcast-listen-actions button { min-height: 44px; padding: .35rem 1.1rem; font-size: .85rem; border: 1px solid var(--border-strong); background: var(--background); }
+.podcast-listen-actions button:hover { background: var(--foreground); color: var(--background); }
+.podcast-listen-actions button:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
 
 /* Persistent podcast dock. The <audio> element inside is mounted once in the root
    layout and never moves: expanded, compact, and hidden are CSS states only.

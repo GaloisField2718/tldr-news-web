@@ -9,7 +9,7 @@ import { getLatestPublishedDaily, getPublishedDailyPodcast } from "@/lib/daily-l
 import { formatLongDate } from "@/lib/format"
 
 export default function HomePage() {
-  const latest = getLatestIssues(6)
+  const latest = getLatestIssues(5)
   const sectors = getSectors()
   const years = getYears()
   const manifest = getArchiveCatalogue()
@@ -17,7 +17,7 @@ export default function HomePage() {
   const podcast = edition ? getPublishedDailyPodcast(edition.date) : undefined
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-10 md:px-8 md:py-14">
+    <div className="mx-auto max-w-5xl px-5 py-6 md:px-8 md:py-9">
       {/* The latest edition leads the page; the archive remains one click away below. */}
       <section className="border-b border-border-strong pb-8" aria-labelledby="latest-edition-heading">
         {edition ? (
@@ -45,24 +45,29 @@ export default function HomePage() {
             )}
             <h1
               id="latest-edition-heading"
-              className="mt-4 max-w-3xl font-serif text-3xl leading-[1.08] text-foreground text-balance md:text-[2.6rem]"
+              className="mt-4 max-w-3xl font-serif text-[1.7rem] leading-[1.1] text-foreground text-balance md:text-[2.35rem]"
             >
               {edition.title}
             </h1>
-            <p className="mt-3 max-w-2xl font-sans text-[15px] leading-relaxed text-muted-foreground text-pretty">
+            <p className="home-lede mt-3 max-w-2xl font-sans text-[15px] leading-relaxed text-muted-foreground text-pretty">
               {edition.introduction}
             </p>
-            <p className="mt-4 font-serif text-lg">
+            {/* The page's primary action: given more weight than the surrounding text,
+                with the counts as aligned metadata underneath rather than a trailing aside. */}
+            <div className="mt-5">
               <Link
                 href={`/daily/${edition.date}`}
-                className="underline decoration-border-strong underline-offset-4 hover:text-accent hover:decoration-accent"
+                className="group inline-flex items-baseline gap-2 font-serif text-xl font-semibold text-foreground decoration-2 underline-offset-[6px] hover:text-accent hover:underline"
               >
-                Read the edition →
+                Read the edition
+                <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
+                  →
+                </span>
               </Link>
-              <span className="ml-3 font-sans text-xs text-faint-foreground">
-                {edition.articleCount} stories from {edition.issueCount} newsletters
-              </span>
-            </p>
+              <p className="mt-1.5 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                {edition.articleCount} stories · {edition.issueCount} newsletters
+              </p>
+            </div>
             {podcast && <DailyPodcastListenActions date={edition.date} podcast={podcast} className="podcast-listen" />}
           </>
         ) : (
@@ -83,38 +88,47 @@ export default function HomePage() {
           </>
         )}
 
-        <div className="mt-6 max-w-2xl border-t border-border pt-5">
+      </section>
+
+      {/* A section of its own, so the front page reads as distinct from exploration. */}
+      <section className="border-b border-border pb-7 pt-7" aria-labelledby="search-heading">
+        <h2
+          id="search-heading"
+          className="font-sans text-[11px] font-semibold uppercase tracking-widest text-faint-foreground"
+        >
+          Search all editions
+        </h2>
+        <div className="mt-3 max-w-2xl">
           <SearchField size="lg" />
-          <p className="mt-2 font-sans text-xs text-muted-foreground">
-            Search all editions, or{" "}
-            <Link href="/archive" className="underline underline-offset-4 hover:text-accent">
-              browse the archive
-            </Link>
-            .
-          </p>
         </div>
+        <p className="mt-2 font-sans text-xs text-muted-foreground">
+          Or{" "}
+          <Link href="/archive" className="underline underline-offset-4 hover:text-accent">
+            browse the archive
+          </Link>
+          .
+        </p>
       </section>
 
       <div className="grid grid-cols-1 gap-x-12 gap-y-12 pt-10 lg:grid-cols-[1fr_15rem]">
         {/* Latest issues as an editorial list */}
         <section aria-labelledby="latest-heading">
-          <div className="flex items-baseline justify-between">
-            <h2
-              id="latest-heading"
-              className="font-sans text-[11px] font-semibold uppercase tracking-widest text-faint-foreground"
-            >
-              Latest issues
-            </h2>
-            <Link
-              href="/archive"
-              className="font-sans text-xs text-muted-foreground underline-offset-4 hover:text-accent hover:underline"
-            >
-              Full archive
-            </Link>
-          </div>
+          <h2
+            id="latest-heading"
+            className="font-sans text-[11px] font-semibold uppercase tracking-widest text-faint-foreground"
+          >
+            Latest issues
+          </h2>
           <div className="mt-4">
             <IssueList issues={latest} />
           </div>
+          {/* The home shows a taste of the index; the rest belongs to Browse and Archive. */}
+          <Link
+            href="/archive"
+            className="mt-4 inline-block font-sans text-xs text-muted-foreground underline underline-offset-4 hover:text-accent"
+          >
+            View all issues →
+          </Link>
         </section>
 
         {/* Sectors + years, visible but not dominating */}
@@ -126,7 +140,15 @@ export default function HomePage() {
             >
               Sectors
             </h2>
-            <SectorNav sectors={sectors} />
+            <SectorNav sectors={sectors.slice(0, 6)} />
+            {sectors.length > 6 && (
+              <Link
+                href="/archive"
+                className="mt-3 inline-block font-sans text-xs text-muted-foreground underline underline-offset-4 hover:text-accent"
+              >
+                All {sectors.length} sectors →
+              </Link>
+            )}
           </section>
 
           <section aria-labelledby="years-heading">
