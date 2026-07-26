@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { DailyEditionShell } from "@/components/daily-edition-shell"
 import { NewspaperPage } from "@/components/newspaper-page"
-import { PodcastPlayer } from "@/components/podcast-player"
+import { DailyPodcastRegistrar } from "@/components/podcast-provider"
 import { createDailyEditionNavigation } from "@/lib/daily-navigation"
 import {
   getDailyEdition,
@@ -78,7 +78,9 @@ export default async function DailyEditionPage({ params, searchParams }: PagePro
   const selectedKeys = new Set(selected.slots.map((slot) => slot.article_key))
   const articles = edition.articles.filter((article) => selectedKeys.has(article.article_key))
   const illustration = requestedPage === 1 ? getDailyEditorialIllustration(date) : undefined
-  const podcast = requestedPage === 1 ? getDailyPodcast(date) : undefined
+  // Registered on every journal page, not just the first: the persistent player must
+  // keep the same episode mounted while the reader paginates through the edition.
+  const podcast = getDailyPodcast(date)
   const navigation = createDailyEditionNavigation({
     date,
     formattedDate: formatToolbarDate(date),
@@ -92,7 +94,7 @@ export default async function DailyEditionPage({ params, searchParams }: PagePro
   return (
     <div className="daily-viewer">
       <DailyEditionShell navigation={navigation}>
-        {podcast && <PodcastPlayer podcast={podcast} />}
+        {podcast && <DailyPodcastRegistrar date={date} podcast={podcast} />}
         <NewspaperPage
           page={selected}
           articles={articles}

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Source_Serif_4, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
+import { PodcastProvider } from "@/components/podcast-provider"
 import "./globals.css"
 
 const sourceSerif = Source_Serif_4({
@@ -50,9 +51,15 @@ export default function RootLayout({
       className={`bg-background ${sourceSerif.variable} ${plexSans.variable} ${plexMono.variable}`}
     >
       <body className="font-sans antialiased">
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
+        {/*
+          The persistent podcast player lives here, in the only layout of the app router,
+          so its <audio> element stays mounted across every client-side navigation.
+        */}
+        <PodcastProvider>
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteFooter />
+        </PodcastProvider>
       </body>
     </html>
   )

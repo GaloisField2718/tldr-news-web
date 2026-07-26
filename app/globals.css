@@ -90,16 +90,45 @@
 }
 
 /* Daily Index newspaper viewer */
-.podcast-player { max-width: 72rem; margin: 1rem auto; padding: 1rem 1.25rem; border: 1px solid var(--border); background: var(--background); }
-.podcast-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+/* Persistent podcast dock. The <audio> element inside is mounted once in the root
+   layout and never moves: expanded, compact, and hidden are CSS states only.
+   --podcast-dock-height is measured at runtime so page content is never covered. */
+.podcast-dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--background); border-top: 1px solid var(--border-strong); padding: .6rem .9rem calc(.6rem + env(safe-area-inset-bottom)); }
+.podcast-dock[data-state="hidden"] { display: none; }
+.podcast-dock-inner { max-width: 72rem; margin: 0 auto; }
+.podcast-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
 .podcast-kicker { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; color: var(--muted-foreground); }
-.podcast-player h2 { margin-top: .4rem; font-family: var(--font-serif); font-size: 1.5rem; }
-.podcast-player > p { margin: .45rem 0 .8rem; color: var(--muted-foreground); }
-.podcast-player audio { width: 100%; display: block; }
-.podcast-language { display: flex; border: 1px solid var(--border-strong); }
-.podcast-language button { padding: .35rem .65rem; font-size: .8rem; }
+.podcast-title { margin-top: .3rem; font-family: var(--font-serif); font-size: 1.25rem; line-height: 1.25; }
+.podcast-summary { margin: .45rem 0 .6rem; color: var(--muted-foreground); font-size: .9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.podcast-controls { display: flex; align-items: center; gap: .75rem; }
+.podcast-controls audio { flex: 1; min-width: 0; display: block; width: 100%; }
+.podcast-compact-title { margin-top: .35rem; font-size: .8rem; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.podcast-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+.podcast-actions button { min-height: 44px; padding: .35rem .7rem; font-size: .8rem; border: 1px solid var(--border-strong); background: var(--background); }
+.podcast-language { display: flex; border: 1px solid var(--border-strong); flex-shrink: 0; }
+.podcast-language button { min-height: 44px; padding: .35rem .65rem; font-size: .8rem; }
 .podcast-language button[aria-pressed="true"] { background: var(--foreground); color: var(--background); }
-@media (max-width: 520px) { .podcast-heading { align-items: flex-start; flex-direction: column; } .podcast-language { width: 100%; } .podcast-language button { flex: 1; } }
+.podcast-dock button:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+/* Reserve the dock's real height. Mobile keeps the dock at the bottom in both states
+   so controls stay in the thumb zone; desktop lifts the expanded dock to the top. */
+.podcast-layout[data-podcast="compact"], .podcast-layout[data-podcast="expanded"] { padding-bottom: var(--podcast-dock-height, 6rem); }
+@media (min-width: 768px) {
+  .podcast-dock[data-state="expanded"] { top: 0; bottom: auto; border-top: 0; border-bottom: 1px solid var(--border-strong); padding: .9rem 1.25rem; }
+  .podcast-layout[data-podcast="expanded"] { padding-bottom: 0; padding-top: var(--podcast-dock-height, 10rem); }
+  .podcast-title { font-size: 1.5rem; }
+}
+/* Narrow screens keep the dock small: the summary is already in the page below it,
+   so the dock carries only the title, the language switch, and the controls. */
+@media (max-width: 767px) {
+  .podcast-summary { display: none; }
+  .podcast-title { font-size: 1.05rem; }
+  /* Give the native controls the full width so the seek bar stays usable. The audio
+     must drop its flex-grow here: on the column axis flex:1 would collapse its height. */
+  .podcast-controls { flex-direction: column; align-items: stretch; gap: .5rem; }
+  .podcast-controls audio { flex: 0 0 auto; }
+  .podcast-actions { justify-content: flex-end; }
+}
+@media (max-width: 520px) { .podcast-heading { flex-direction: column; } .podcast-language { width: 100%; } .podcast-language button { flex: 1; } }
 
 .daily-viewer {
   margin: 0 auto;
