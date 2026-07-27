@@ -5,13 +5,14 @@
   "scripts": {
     "data:sync": "node scripts/sync-tldr-data.mjs",
     "data:check": "node scripts/check-tldr-data.mjs",
-    "prebuild": "npm run data:sync",
+    "prebuild": "npm run data:sync && npm run search:index",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "search:index": "node scripts/build-search-index.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
@@ -29,6 +30,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.10",
     "jsdom": "^29.1.1",
+    "pagefind": "^1.5.2",
     "postcss": "^8.4.47",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.6.0",

@@ -5,5 +5,6 @@ import nextTypeScript from "eslint-config-next/typescript"
 export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
-  globalIgnores([".next/**", "coverage/**", "next-env.d.ts"]),
+  // public/search-index is generated third-party output from `npm run search:index`.
+  globalIgnores([".next/**", "coverage/**", "next-env.d.ts", "public/search-index/**"]),
 ])
