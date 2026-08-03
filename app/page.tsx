@@ -27,7 +27,7 @@ export default function HomePage() {
               <time dateTime={edition.date}>{formatLongDate(edition.date)}</time>
             </p>
             {edition.illustration && (
-              <figure className="mt-4">
+              <figure className="home-editorial-illustration mt-4">
                 <img
                   src={edition.illustration.src}
                   width={edition.illustration.width}
