@@ -318,6 +318,11 @@ body[data-daily-immersive="native"] .daily-immersive-shell {
   .daily-side-arrow-next { right: 0; }
 }
 
+/* The newspaper is intentionally typeset like a large broadsheet, but at 100% browser
+   scale it dominates a desktop viewport. Match the more legible 67% reading scale while
+   leaving the surrounding navigation and all mobile touch targets at their normal size. */
+@media (min-width: 1200px) { .newspaper-sheet { zoom: 67%; } }
+
 .newspaper-sheet {
   max-width: 82rem;
   margin: 0 auto;
